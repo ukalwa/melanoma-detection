@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_name">SkinCancerDetection</string>
+    <string name="app_name">MoleDetection</string>
     <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
     <string name="contact_us"><b><u>Primary Contact:</u></b>\n <b>Upender Kalwa</b>\n <i>ukalwa@iastate.edu</i>\n1050 Coover Hall</string>
