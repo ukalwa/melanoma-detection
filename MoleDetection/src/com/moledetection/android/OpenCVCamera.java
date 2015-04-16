@@ -14,7 +14,6 @@ import org.opencv.android.CameraBridgeViewBase.CvCameraViewFrame;
 import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.CameraBridgeViewBase.CvCameraViewListener2;
 import org.opencv.core.Core;
-import org.opencv.core.Core.MinMaxLocResult;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
@@ -47,8 +46,8 @@ import android.widget.Toast;
 @SuppressLint("ClickableViewAccessibility")
 @SuppressWarnings("deprecation")
 public class OpenCVCamera extends Activity implements CvCameraViewListener2,OnTouchListener  {
-	private static final String TAG = "OpenCVCamera::Activity";
-	private static final String mDirName = "SkinCancerDetection";
+	private static final String TAG = "MoleDetection::OpenCVCamera";
+	private static final String mDirName = "MoleDetection";
 	private Button button;
 	private boolean buttonClicked=false;
 	private Mat mHierarchy;
