@@ -1,0 +1,39 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="center_horizontal"
+    tools:context="${relativePackage}.${activityClass}" >
+
+    <TextView
+        android:id="@+id/textView1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:text="Melanoma Skin Cancer"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:textSize="30dp"
+        android:textStyle="bold"
+        android:typeface="sans" />
+
+    <TextView
+        android:id="@+id/textView2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/textView1"
+        android:layout_below="@+id/textView1"
+        android:layout_marginTop="18dp"
+        android:text="
+        It is the most dangerous form of Skin Cancer.The tumor cells often resemble moles; some develop from moles.If detected early it can be cured.
+        \nThis App aims in analysing the moles and determine the closeness of melanoma tumors.
+        \nIt is based on the widely accepted ABCDE early detection rule.
+        \nA - Assymetry
+        \nB - Border Irregularity
+        \nC - Color Often Black and color gradient
+        \nD - Diameter greater than 1/4 inch
+        \nE - Evolution size of the mole increases with time"
+        android:textAppearance="?android:attr/textAppearanceMedium" />
+
+</RelativeLayout>
