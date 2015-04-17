@@ -1,8 +1,12 @@
 package com.moledetection.android;
 
+import java.io.File;
+
 import android.app.Activity;
 import android.content.Context;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
@@ -19,7 +23,7 @@ public class GetPreviousPictures extends Activity {
      * Cursor used to access the results from querying for images on the SD card.
      */
     private Cursor cursor;
-    /*
+    /**
      * Column index for the Thumbnails Image IDs.
      */
     private int columnIndex;
@@ -60,7 +64,6 @@ public class GetPreviousPictures extends Activity {
                 cursor.moveToPosition(position);
                 // Get image filename
                 String imagePath = cursor.getString(columnIndex);
-                // Use this path to do further processing, i.e. full screen display
             }
 
 			

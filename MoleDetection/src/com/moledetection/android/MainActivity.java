@@ -16,6 +16,7 @@ public class MainActivity extends ListActivity {
 	static final String[] ACTIVITY_CHOICES = new String[] {
 		 "About the App",
 		 "Take a Photo",
+		 "Get previous pictures",
 		 "Contact Us"
 		};
 
@@ -24,7 +25,8 @@ public class MainActivity extends ListActivity {
         super.onCreate(savedInstanceState);
     	final Context context = getApplicationContext();
         final Intent home_intent = new Intent(context, Home.class);
-        final Intent intent = new Intent(context, ContactUs.class);
+        final Intent prev_intent = new Intent(context, GetPreviousPictures.class);
+        final Intent contact_intent = new Intent(context, ContactUs.class);
         final Intent cam_intent = new Intent(context, OpenCVCamera.class);
         
         //setContentView(R.layout.activity_main);
@@ -47,7 +49,10 @@ public class MainActivity extends ListActivity {
             startActivity(cam_intent);
         break;
         case 2: 
-            startActivity(intent);
+            startActivity(prev_intent);
+        break;
+        case 3: 
+            startActivity(contact_intent);
         break;
         default: break;
         }
