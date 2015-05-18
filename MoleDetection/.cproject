@@ -21,13 +21,13 @@
 							<tool id="cdt.managedbuild.tool.gnu.cpp.compiler.base.700720106" name="GCC C++ Compiler" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.base">
 								<option id="gnu.cpp.compiler.option.optimization.level.2024581639" name="Optimization Level" superClass="gnu.cpp.compiler.option.optimization.level" value="gnu.cpp.compiler.optimization.level.none" valueType="enumerated"/>
 								<option id="gnu.cpp.compiler.option.debugging.level.1424331083" name="Debug Level" superClass="gnu.cpp.compiler.option.debugging.level" value="gnu.cpp.compiler.debugging.level.max" valueType="enumerated"/>
-								<option id="gnu.cpp.compiler.option.include.paths.261592566" superClass="gnu.cpp.compiler.option.include.paths" valueType="includePath">
-									<listOptionValue builtIn="false" value="&quot;C:\Android\android-ndk-r10d\platforms\android-9\arch-arm\usr\include&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;C:\Android\android-ndk-r10d\sources\android\native_app_glue&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;C:\Android\android-ndk-r10d\sources\cxx-stl\gnu-libstdc++\4.8\include&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;C:\Android\android-ndk-r10d\sources\cxx-stl\gnu-libstdc++\4.8\libs\armeabi-v7a\include&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;C:\Users\Upender\Downloads\OpenCV-android-sdk\sdk\native\jni\include&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;C:\Android\android-ndk-r10d\toolchains\arm-linux-androideabi-4.8\prebuilt\windows-x86_64\lib\gcc\arm-linux-androideabi\4.8\include&quot;"/>
+								<option id="gnu.cpp.compiler.option.include.paths.261592566" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" valueType="includePath">
+									<listOptionValue builtIn="false" value="&quot;${OPENCV_SDK}/sdk/native/jni/include&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ANDROID_NDK_PATH}/platforms/android-9/arch-arm/usr/include&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ANDROID_NDK_PATH}\sources\android\native_app_glue&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ANDROID_NDK_PATH}\sources\cxx-stl\gnu-libstdc++\4.8\include&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ANDROID_NDK_PATH}\sources\cxx-stl\gnu-libstdc++\4.8\libs\armeabi-v7a\include&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ANDROID_NDK_PATH}\toolchains\arm-linux-androideabi-4.8\prebuilt\windows-x86_64\lib\gcc\arm-linux-androideabi\4.8\include&quot;"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.1502652024" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
 							</tool>
