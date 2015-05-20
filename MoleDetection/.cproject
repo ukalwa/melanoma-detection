@@ -16,7 +16,7 @@
 					<folderInfo id="cdt.managedbuild.config.gnu.mingw.exe.debug.1095782383." name="/" resourcePath="">
 						<toolChain id="cdt.managedbuild.toolchain.gnu.base.1351544516" name="Linux GCC" resourceTypeBasedDiscovery="true" superClass="cdt.managedbuild.toolchain.gnu.base">
 							<targetPlatform archList="all" binaryParser="org.eclipse.cdt.core.ELF" id="cdt.managedbuild.target.gnu.platform.base.1447486996" name="Debug Platform" osList="linux,hpux,aix,qnx" superClass="cdt.managedbuild.target.gnu.platform.base"/>
-							<builder buildPath="${workspace_loc:/MoleDetection/Debug}" command="${NDKROOT}/ndk-build.cmd" enableAutoBuild="true" id="com.android.builder.1442575112" keepEnvironmentInBuildfile="false" name="Android Builder" superClass="com.android.builder"/>
+							<builder buildPath="${workspace_loc:/MoleDetection/Debug}" command="${ANDROID_NDK_PATH}/ndk-build.cmd" enableAutoBuild="true" id="com.android.builder.1442575112" keepEnvironmentInBuildfile="false" name="Android Builder" superClass="com.android.builder"/>
 							<tool id="cdt.managedbuild.tool.gnu.archiver.base.194363422" name="GCC Archiver" superClass="cdt.managedbuild.tool.gnu.archiver.base"/>
 							<tool id="cdt.managedbuild.tool.gnu.cpp.compiler.base.700720106" name="GCC C++ Compiler" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.base">
 								<option id="gnu.cpp.compiler.option.optimization.level.2024581639" name="Optimization Level" superClass="gnu.cpp.compiler.option.optimization.level" value="gnu.cpp.compiler.optimization.level.none" valueType="enumerated"/>
@@ -104,17 +104,20 @@
 	</storageModule>
 	<storageModule moduleId="scannerConfiguration">
 		<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
-		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.mingw.exe.debug.1095782383;cdt.managedbuild.config.gnu.mingw.exe.debug.1095782383.;cdt.managedbuild.tool.gnu.cpp.compiler.mingw.exe.debug.591072933;cdt.managedbuild.tool.gnu.cpp.compiler.input.1945332462">
-			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileCPP"/>
+		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.mingw.exe.release.985781746;cdt.managedbuild.config.gnu.mingw.exe.release.985781746.;cdt.managedbuild.tool.gnu.c.compiler.mingw.exe.release.1263446752;cdt.managedbuild.tool.gnu.c.compiler.input.925272368">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileC"/>
 		</scannerConfigBuildInfo>
 		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.mingw.exe.release.985781746;cdt.managedbuild.config.gnu.mingw.exe.release.985781746.;cdt.managedbuild.tool.gnu.cpp.compiler.mingw.exe.release.559575907;cdt.managedbuild.tool.gnu.cpp.compiler.input.583487498">
 			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileCPP"/>
 		</scannerConfigBuildInfo>
-		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.mingw.exe.release.985781746;cdt.managedbuild.config.gnu.mingw.exe.release.985781746.;cdt.managedbuild.tool.gnu.c.compiler.mingw.exe.release.1263446752;cdt.managedbuild.tool.gnu.c.compiler.input.925272368">
-			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileC"/>
+		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.mingw.exe.debug.1095782383;cdt.managedbuild.config.gnu.mingw.exe.debug.1095782383.;cdt.managedbuild.tool.gnu.cpp.compiler.mingw.exe.debug.591072933;cdt.managedbuild.tool.gnu.cpp.compiler.input.1945332462">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileCPP"/>
 		</scannerConfigBuildInfo>
 		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.mingw.exe.debug.1095782383;cdt.managedbuild.config.gnu.mingw.exe.debug.1095782383.;cdt.managedbuild.tool.gnu.c.compiler.base.2072014379;cdt.managedbuild.tool.gnu.c.compiler.input.699709106">
 			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileC"/>
+		</scannerConfigBuildInfo>
+		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.mingw.exe.debug.1095782383;cdt.managedbuild.config.gnu.mingw.exe.debug.1095782383.;cdt.managedbuild.tool.gnu.cpp.compiler.base.1046363098;cdt.managedbuild.tool.gnu.cpp.compiler.input.1881982003">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileCPP"/>
 		</scannerConfigBuildInfo>
 		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.mingw.exe.debug.1095782383;cdt.managedbuild.config.gnu.mingw.exe.debug.1095782383.;cdt.managedbuild.tool.gnu.c.compiler.mingw.exe.debug.1274555885;cdt.managedbuild.tool.gnu.c.compiler.input.1670216379">
 			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileC"/>
@@ -122,5 +125,9 @@
 		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.mingw.exe.debug.1095782383;cdt.managedbuild.config.gnu.mingw.exe.debug.1095782383.;cdt.managedbuild.tool.gnu.cpp.compiler.base.700720106;cdt.managedbuild.tool.gnu.cpp.compiler.input.1502652024">
 			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileCPP"/>
 		</scannerConfigBuildInfo>
+		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.mingw.exe.debug.1095782383;cdt.managedbuild.config.gnu.mingw.exe.debug.1095782383.;cdt.managedbuild.tool.gnu.c.compiler.base.279969028;cdt.managedbuild.tool.gnu.c.compiler.input.529594385">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileC"/>
+		</scannerConfigBuildInfo>
 	</storageModule>
+	<storageModule moduleId="org.eclipse.cdt.internal.ui.text.commentOwnerProjectMappings"/>
 </cproject>

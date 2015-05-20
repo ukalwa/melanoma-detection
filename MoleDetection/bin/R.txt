@@ -468,10 +468,11 @@ int layout galleryitem 0x7f030020
 int layout support_simple_spinner_dropdown_item 0x7f030021
 int menu get_previous_pictures 0x7f0c0000
 int menu image 0x7f0c0001
-int menu main 0x7f0c0002
-int menu main_activity2 0x7f0c0003
-int menu my_list 0x7f0c0004
-int menu process_image 0x7f0c0005
+int menu list 0x7f0c0002
+int menu main 0x7f0c0003
+int menu main_activity2 0x7f0c0004
+int menu my_list 0x7f0c0005
+int menu process_image 0x7f0c0006
 int string abc_action_bar_home_description 0x7f0a0001
 int string abc_action_bar_home_description_format 0x7f0a0005
 int string abc_action_bar_home_subtitle_description_format 0x7f0a0006
