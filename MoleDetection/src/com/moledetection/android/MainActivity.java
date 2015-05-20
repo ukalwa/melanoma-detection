@@ -1,63 +1,33 @@
 package com.moledetection.android;
 
-import android.app.ListActivity;
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.AdapterView;
-import android.widget.AdapterView.OnItemClickListener;
-import android.widget.ArrayAdapter;
-import android.widget.ListView;
+import android.view.View.OnClickListener;
+import android.widget.Button;
 
 
-public class MainActivity extends ListActivity {
-
-	static final String[] ACTIVITY_CHOICES = new String[] {
-		 "About the App",
-		 "Take a Photo",
-		 "Get previous pictures",
-		 "Contact Us"
-		};
+public class MainActivity extends Activity {
+	private Button BeginBtn;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
     	final Context context = getApplicationContext();
-        final Intent home_intent = new Intent(context, Home.class);
-        final Intent prev_intent = new Intent(context, GetPreviousPictures.class);
-        final Intent contact_intent = new Intent(context, ContactUs.class);
-        final Intent cam_intent = new Intent(context, OpenCVCamera.class);
+    	final Intent listActivityIntent = new Intent(context, MyListActivity.class);
+    	
+        setContentView(R.layout.activity_main);
         
-        //setContentView(R.layout.activity_main);
-        setListAdapter(new ArrayAdapter<String>(this,
-        		 android.R.layout.simple_selectable_list_item,
-        		 ACTIVITY_CHOICES));
-        		  getListView().setChoiceMode(ListView.CHOICE_MODE_SINGLE);
-        		  getListView().setTextFilterEnabled(true);
-        
-        getListView().setOnItemClickListener(new OnItemClickListener()
-        {
-        @Override
-        public void onItemClick(AdapterView<?> arg0, View arg1,
-        int arg2, long arg3) {
-        switch(arg2) {
-        case 0:
-        startActivity(home_intent);
-        break;
-        case 1:
-            startActivity(cam_intent);
-        break;
-        case 2: 
-            startActivity(prev_intent);
-        break;
-        case 3: 
-            startActivity(contact_intent);
-        break;
-        default: break;
-        }
-        }		
-    });
+        BeginBtn = (Button) findViewById(R.id.angry_btn);
+        BeginBtn.setOnClickListener(new OnClickListener() {
+
+			@Override
+			public void onClick(View v) {
+				startActivity(listActivityIntent);
+			}
+		});
     
     }
 }

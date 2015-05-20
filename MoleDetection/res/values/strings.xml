@@ -12,5 +12,6 @@
     <string name="title_activity_process_image">ProcessImage</string>
     <string name="title_activity_get_previous_pictures">GetPreviousPictures</string>
     <string name="title_activity_main_activity2">MainActivity2</string>
+    <string name="title_activity_my_list">MyListActivity</string>
 
 </resources>
