@@ -140,7 +140,7 @@ public class GetPreviousPictures extends Activity {
         files = f.listFiles(new FilenameFilter() {
             @Override
             public boolean accept(File dir, String name) {
-                return ((name.endsWith(".jpg")) || (name.endsWith(".png")));
+                return ((name.endsWith(".jpg")) || (name.endsWith(".JPG")) ||(name.endsWith(".png")));
             }
         });
 
