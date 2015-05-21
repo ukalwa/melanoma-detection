@@ -1,5 +1,5 @@
-U:/git/moledetection/MoleDetection//obj/local/armeabi-v7a/objs/active_contour/jni_part.o: \
- U:/git/moledetection/MoleDetection//jni/jni_part.cpp \
+U:/Git/MoleDetection//obj/local/armeabi-v7a/objs/active_contour/jni_part.o: \
+ U:/Git/MoleDetection//jni/jni_part.cpp \
  C:/Users/Public/Downloads/android-ndk-r10d/platforms/android-8/arch-arm/usr/include/jni.h \
  C:/Users/Public/Downloads/android-ndk-r10d/platforms/android-8/arch-arm/usr/include/sys/cdefs.h \
  C:/Users/Public/Downloads/android-ndk-r10d/platforms/android-8/arch-arm/usr/include/sys/cdefs_elf.h \
@@ -53,9 +53,9 @@ U:/git/moledetection/MoleDetection//obj/local/armeabi-v7a/objs/active_contour/jn
  C:/Users\Public\Downloads\OpenCV-2.4.10-android-sdk/sdk/native/jni/include/opencv2/highgui/highgui.hpp \
  C:/Users\Public\Downloads\OpenCV-2.4.10-android-sdk/sdk/native/jni/include/opencv2/highgui/highgui_c.h \
  C:/Users/Public/Downloads/android-ndk-r10d/sources/cxx-stl/gnu-libstdc++/4.8/include/cassert \
- U:/git/moledetection/MoleDetection//jni/linked_list.hpp \
- U:/git/moledetection/MoleDetection//jni/ac_withoutedges_yuv.hpp \
- U:/git/moledetection/MoleDetection//jni/activecontour.hpp
+ U:/Git/MoleDetection//jni/linked_list.hpp \
+ U:/Git/MoleDetection//jni/ac_withoutedges_yuv.hpp \
+ U:/Git/MoleDetection//jni/activecontour.hpp
 
 C:/Users/Public/Downloads/android-ndk-r10d/platforms/android-8/arch-arm/usr/include/jni.h:
 
@@ -163,8 +163,8 @@ C:/Users\Public\Downloads\OpenCV-2.4.10-android-sdk/sdk/native/jni/include/openc
 
 C:/Users/Public/Downloads/android-ndk-r10d/sources/cxx-stl/gnu-libstdc++/4.8/include/cassert:
 
-U:/git/moledetection/MoleDetection//jni/linked_list.hpp:
+U:/Git/MoleDetection//jni/linked_list.hpp:
 
-U:/git/moledetection/MoleDetection//jni/ac_withoutedges_yuv.hpp:
+U:/Git/MoleDetection//jni/ac_withoutedges_yuv.hpp:
 
-U:/git/moledetection/MoleDetection//jni/activecontour.hpp:
+U:/Git/MoleDetection//jni/activecontour.hpp:

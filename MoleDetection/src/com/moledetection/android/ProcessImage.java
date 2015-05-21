@@ -23,7 +23,7 @@ public class ProcessImage extends Activity {
     private ImageView imageView;
     private Bitmap bm,newBmp;
     private Mat originalMat,tempMat;
-    private Mat grayMat,hsvMat,mIntermediateMatsub;
+    private Mat grayMat,hsvMat,mIntermediateMatsub,zeroMat;
  
     private BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this) {
         @Override
@@ -60,6 +60,7 @@ public class ProcessImage extends Activity {
         tempMat = new Mat(bm.getHeight(),bm.getWidth(),CvType.CV_8UC3);
         originalMat = new Mat(bm.getHeight(),bm.getWidth(),CvType.CV_8UC3);
         Utils.bitmapToMat(bm, originalMat);
+        zeroMat = Mat.zeros(tempMat.size(), CvType.CV_8UC1);
         //CLAHE c = null;
         //c.apply(tempMat, originalMat);
         //Imgproc.e
@@ -99,9 +100,9 @@ public class ProcessImage extends Activity {
         luminance.copyTo(channels.get(2));
         Core.merge(channels, hsvMat);
         */  
-        ActiveContour(hsvMat.getNativeObjAddr(),grayMat.getNativeObjAddr(),originalMat.getNativeObjAddr());
+        ActiveContour(hsvMat.getNativeObjAddr(),zeroMat.getNativeObjAddr(),originalMat.getNativeObjAddr());
         newBmp = Bitmap.createBitmap(hsvMat.cols(), hsvMat.rows(), Bitmap.Config.ARGB_8888);
-        Utils.matToBitmap(hsvMat, newBmp);
+        Utils.matToBitmap(zeroMat, newBmp);
         imageView.setImageBitmap(newBmp);
         hsvMat.release();
         grayMat.release();
