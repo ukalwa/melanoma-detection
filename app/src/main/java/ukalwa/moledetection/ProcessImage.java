@@ -34,6 +34,7 @@ public class ProcessImage extends Activity {
                     Log.i(TAG, "OpenCV loaded successfully");
                     System.out.print("OpenCV loaded successfully");
                     System.loadLibrary("active_contour");
+//                    System.loadLibrary("opencv_java");
                     processImage();
                 } break;
                 default:
@@ -114,7 +115,7 @@ public class ProcessImage extends Activity {
     public void onResume()
     {
         super.onResume();
-        OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_2_4_8, this, mLoaderCallback);
+        OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_2_4_10, getApplicationContext(), mLoaderCallback);
     }
      
     public native void ActiveContour(long matAddrHsv,long matAddrGr, long matAddrRgba);
