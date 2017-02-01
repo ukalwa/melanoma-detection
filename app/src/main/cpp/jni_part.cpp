@@ -17,9 +17,9 @@ using namespace std;
 using namespace cv;
 
 extern "C" {
-JNIEXPORT void JNICALL Java_com_moledetection_android_ProcessImage_ActiveContour(JNIEnv*, jobject,jlong addrHsv, jlong addrGray, jlong addrRgba);
+JNIEXPORT void JNICALL Java_ukalwa_moledetection_ProcessImage_ActiveContour(JNIEnv*, jobject,jlong addrHsv, jlong addrGray, jlong addrRgba);
 
-JNIEXPORT void JNICALL Java_com_moledetection_android_ProcessImage_ActiveContour(JNIEnv*, jobject, jlong addrHsv,jlong addrGray, jlong addrRgba)
+JNIEXPORT void JNICALL Java_ukalwa_moledetection_ProcessImage_ActiveContour(JNIEnv*, jobject, jlong addrHsv,jlong addrGray, jlong addrRgba)
 {
     Mat& mHsv  = *(Mat*)addrHsv;
     Mat& mGr  = *(Mat*)addrGray;
