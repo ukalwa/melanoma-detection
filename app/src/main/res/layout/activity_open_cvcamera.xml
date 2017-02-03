@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     android:focusable="true"
     android:focusableInTouchMode="true"
-    android:gravity="clip_vertical" >
+    android:gravity="clip_vertical">
     
     <ukalwa.moledetection.CustomCameraView
         android:id="@+id/opencv_activity_java_surface_view"

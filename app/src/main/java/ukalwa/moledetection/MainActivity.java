@@ -12,6 +12,7 @@ import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
+import android.widget.Toast;
 
 
 public class MainActivity extends Activity {
@@ -29,13 +30,14 @@ public class MainActivity extends Activity {
         setContentView(R.layout.activity_main);
         File mDirectory = new File(Environment.getExternalStorageDirectory(), "/" + mDirName);
         if(!mDirectory.exists())
-        {
-        	if(!mDirectory.mkdir())
-        	{
-        		Log.i(TAG, "Unable to create directory");
-        	}
-        	Log.i(TAG, "Directory Created");
-        }
+		{
+			Toast.makeText(this, "Directory : " + Environment.getExternalStorageDirectory() + "/" + mDirName, Toast.LENGTH_SHORT).show();
+			Log.i(TAG, "Directory " + mDirName + " does not exist");
+			if(!mDirectory.mkdir())
+				Log.i(TAG, "Unable to create directory " + mDirName);
+			else
+				Log.i(TAG, "Directory " + mDirName + " Created");
+		}
         
         BeginBtn = (Button) findViewById(R.id.angry_btn);
         BeginBtn.setOnClickListener(new OnClickListener() {

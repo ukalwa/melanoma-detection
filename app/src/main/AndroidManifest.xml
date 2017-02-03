@@ -56,10 +56,10 @@
             android:name=".ContactUs"
             android:label="@string/title_activity_contact_us" >
         </activity>
-        <activity
-            android:name=".MenuActivity"
-            android:label="@string/title_activity_menu" >
-        </activity>
+        <!--<activity-->
+            <!--android:name=".MenuActivity"-->
+            <!--android:label="@string/title_activity_menu" >-->
+        <!--</activity>-->
         <activity
             android:name=".OpenCVCamera"
             android:configChanges="keyboardHidden|orientation"
@@ -75,13 +75,17 @@
             android:name=".GetPreviousPictures"
             android:label="@string/title_activity_get_previous_pictures" >
         </activity>
-        <activity
-            android:name=".MainActivity2"
-            android:label="@string/title_activity_main_activity2" >
-        </activity>
+        <!--<activity-->
+            <!--android:name=".MainActivity2"-->
+            <!--android:label="@string/title_activity_main_activity2" >-->
+        <!--</activity>-->
         <activity
             android:name=".MyListActivity"
             android:label="@string/title_activity_my_list" >
+        </activity>
+        <activity
+            android:name=".ColorBlobDetectionActivity"
+            android:label="@string/title_activity_color_blob" >
         </activity>
     </application>
 

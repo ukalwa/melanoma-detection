@@ -1,7 +1,7 @@
 # Sets the minimum version of CMake required to build the native
 # library. You should either keep the default value or only pass a
 # value of 3.4.0 or lower.
-set(pathToProject C:/Users/ukalwa/workspace/Opencv-demo)
+set(pathToProject C:/Users/ukalwa/workspace/moledetection_v2.0)
 set(pathToOpenCv C:/Users/ukalwa/Downloads/OpenCV-2.4.10-android-sdk)
 set(CMAKE_VERBOSE_MAKEFILE on)
 
@@ -47,8 +47,7 @@ find_library( # Sets the name of the path variable.
 
 target_link_libraries( # Specifies the target library.
                        active_contour
-
+                       lib_opencv
                        # Links the target library to the log library
                        # included in the NDK.
-                       ${log-lib}
-                       lib_opencv )
+                       ${log-lib} )

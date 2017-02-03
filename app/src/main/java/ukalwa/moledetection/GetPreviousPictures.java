@@ -23,6 +23,8 @@ import android.widget.Button;
 import android.widget.GridView;
 import android.widget.ImageView;
 
+import static android.widget.Toast.*;
+
 public class GetPreviousPictures extends Activity {
 	public final static String FILEPATH = "MESSAGE";
     private static final String mDirName = "MoleDetection";
@@ -75,7 +77,7 @@ public class GetPreviousPictures extends Activity {
                 addListenerOnButton2();
                 addListenerOnButtonProceed();
 
-    System.out.println("inside the full image?????????????????????????????????");
+                System.out.println("inside the full image?????????????????????????????????");
 
 
                  //Intent i = new Intent(GetPreviousPictures.this, imageViewFlipper.class);
@@ -140,16 +142,20 @@ public class GetPreviousPictures extends Activity {
         files = f.listFiles(new FilenameFilter() {
             @Override
             public boolean accept(File dir, String name) {
-                return ((name.endsWith(".jpg")) || (name.endsWith(".JPG")) ||(name.endsWith(".png")));
+                return ((name.endsWith(".jpg")) || (name.endsWith(".JPG")) ||(name.endsWith(".png") || (name.endsWith(".PNG"))));
             }
         });
-
-        for (int i = 0; i < files.length; i++) {
-            File file = files[i];
-            /*
-             * It's assumed that all file in the path are in supported type
-             */
-            tFileList.add(file.getPath());
+        if (files != null) {
+            for (int i = 0; i < files.length; i++) {
+                File file = files[i];
+                /*
+                 * It's assumed that all file in the path are in supported type
+                 */
+                tFileList.add(file.getPath());
+            }
+        }
+        else{
+            makeText(GetPreviousPictures.this, "No files found " , LENGTH_SHORT).show();
         }
         return tFileList;
     }

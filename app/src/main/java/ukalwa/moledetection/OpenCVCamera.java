@@ -64,16 +64,17 @@ public class OpenCVCamera extends Activity implements CvCameraViewListener2,OnTo
     private SubMenu mColorEffectsMenu;
     private MenuItem[] mResolutionMenuItems;
     private SubMenu mResolutionMenu;
-	private boolean              mIsColorSelected = false;
+    //private boolean              mIsColorSelected = false;
     private Mat                  mRgba;
-    private Scalar               mBlobColorRgba;
+    //private Scalar               mBlobColorRgba;
     private Scalar               mBlobColorHsv;
-    private ColorBlobDetector    mDetector;
+    //private ColorBlobDetector    mDetector;
     private Mat                  mSpectrum;
-    private Size                 SPECTRUM_SIZE;
+    //private Size                 SPECTRUM_SIZE;
     private Scalar               CONTOUR_COLOR;
-    
-    private Point pt,pt1,pt2,pt3,pt4,pt5,pt6,CentrePt;
+
+    private Point pt,pt1,pt2,pt3,pt4,pt5,CentrePt;
+    //private Point pt6;
     private Rect rect,rect2;
     private Mat mResult,mSubResult,mRoi;
     private boolean onTouch = false; 
@@ -81,6 +82,7 @@ public class OpenCVCamera extends Activity implements CvCameraViewListener2,OnTo
 	
 
 	private BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this) {
+        @SuppressLint("LongLogTag")
         @Override
         public void onManagerConnected(int status) {
             switch (status) {
@@ -195,11 +197,11 @@ public class OpenCVCamera extends Activity implements CvCameraViewListener2,OnTo
 	    mHSVsub = new Mat();
 	    mIntermediateMatsub = new Mat();
 	    mPyrDownMat = new Mat();
-        mDetector = new ColorBlobDetector();
+        //mDetector = new ColorBlobDetector();
         mSpectrum = new Mat();
-        mBlobColorRgba = new Scalar(255);
+        //mBlobColorRgba = new Scalar(255);
         mBlobColorHsv = new Scalar(255);
-        SPECTRUM_SIZE = new Size(200, 64);
+        //SPECTRUM_SIZE = new Size(200, 64);
         //mSize = new Size(3,3);
         CONTOUR_COLOR = new Scalar(255,255,255,255);
         CentrePt = new Point(width/2,height/2);
@@ -210,7 +212,7 @@ public class OpenCVCamera extends Activity implements CvCameraViewListener2,OnTo
 		pt4 = new Point((width+8)/2-width/8,(height-8)/2+height/8);
 		//For displaying enlarged image
 		pt5 = new Point (0,0);
-		pt6 = new Point((width-8)/2+width/4,(height+8)/2-height/4);
+        //pt6 = new Point((width-8)/2+width/4,(height+8)/2-height/4);
 		rect = new Rect(pt3,pt4);
 		rect2 = new Rect(pt5,mSubResult.size());
 		

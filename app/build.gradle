@@ -13,7 +13,7 @@ android {
         multiDexEnabled true
         externalNativeBuild {
             cmake {
-                cppFlags "-frtti -fexceptions"
+                cppFlags "-std=c++11 -frtti -fexceptions"
                 abiFilters 'x86', 'armeabi', 'armeabi-v7a', 'mips'
             }
         }
@@ -31,7 +31,7 @@ android {
     }
     sourceSets {
         main {
-            jniLibs.srcDirs = ['src/main/jniLibs']
+            jniLibs.srcDirs = ['c:/Users/ukalwa/workspace/moledetection_v2.0/app/src/main/jniLibs']
         }
     }
 }
