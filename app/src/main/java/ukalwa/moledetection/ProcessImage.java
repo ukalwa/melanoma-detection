@@ -44,6 +44,7 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 import android.widget.ViewFlipper;
 
 public class ProcessImage extends Activity {
@@ -303,7 +304,7 @@ public class ProcessImage extends Activity {
         luminance.copyTo(channels.get(2));
         Core.merge(channels, hsvMat);
         */
-
+        Toast.makeText(mContext, stringFromJNI(), Toast.LENGTH_SHORT).show();
         //Calling Active Contour native method written in C++
         ActiveContour(hsvMat.getNativeObjAddr(),grMat.getNativeObjAddr(),originalMat.getNativeObjAddr());
 
@@ -875,4 +876,5 @@ public class ProcessImage extends Activity {
     }
 
     public native void ActiveContour(long matAddrHsv,long matAddrGr, long matAddrRgba);
+    public native String  stringFromJNI();
 }

@@ -81,3 +81,11 @@ JNIEXPORT void JNICALL Java_ukalwa_moledetection_ProcessImage_ActiveContour(JNIE
 	}
 }
 }
+
+extern "C" JNIEXPORT jstring JNICALL
+Java_ukalwa_moledetection_ProcessImage_stringFromJNI(JNIEnv *env, jobject thiz) {
+	// Just for simplicity, we do this right away; correct way would do it in
+	// another thread...
+
+	return env->NewStringUTF("Hello from Active Contour!");
+}

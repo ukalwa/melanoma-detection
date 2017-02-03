@@ -1,14 +1,15 @@
 # Sets the minimum version of CMake required to build the native
 # library. You should either keep the default value or only pass a
 # value of 3.4.0 or lower.
-set(pathToProject C:/Users/ukalwa/workspace/moledetection_v2.0)
+set(pathToApp C:/Users/ukalwa/workspace/moledetection_v2.0/app)
 set(pathToOpenCv C:/Users/ukalwa/Downloads/OpenCV-2.4.10-android-sdk)
+set(cppLoc src/main/cpp)
 set(CMAKE_VERBOSE_MAKEFILE on)
 
 cmake_minimum_required(VERSION 3.4.1)
 include_directories(${pathToOpenCv}/sdk/native/jni/include)
 add_library( lib_opencv SHARED IMPORTED )
-set_target_properties(lib_opencv PROPERTIES IMPORTED_LOCATION ${pathToProject}/app/src/main/jniLibs/${ANDROID_ABI}/libopencv_java.so)
+set_target_properties(lib_opencv PROPERTIES IMPORTED_LOCATION ${pathToApp}/src/main/jniLibs/${ANDROID_ABI}/libopencv_java.so)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++11")
 
 
@@ -17,16 +18,10 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++11")
 # You can define multiple libraries, and CMake builds it for you.
 # Gradle automatically packages shared libraries with your APK.
 
-add_library( # Sets the name of the library.
-             active_contour
+add_library( active_contour SHARED
+             ${cppLoc}/jni_part.cpp ${cppLoc}/ac_withoutedges_yuv.cpp ${cppLoc}/activecontour.cpp ${cppLoc}/linked_list.cpp )
 
-             # Sets the library as a shared library.
-             SHARED
-
-             # Provides a relative path to your source file(s).
-             # Associated headers in the same location as their source
-             # file are automatically included.
-             src/main/cpp/jni_part.cpp src/main/cpp/ac_withoutedges_yuv.cpp src/main/cpp/activecontour.cpp src/main/cpp/linked_list.cpp )
+# include_directories(src/main/cpp/include/)
 
 # Searches for a specified prebuilt library and stores the path as a
 # variable. Because system libraries are included in the search path by

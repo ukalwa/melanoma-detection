@@ -1,20 +1,25 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 25
-    buildToolsVersion "25.0.2"
+    compileSdkVersion 23
+    buildToolsVersion '23.0.3'
     defaultConfig {
         applicationId "ukalwa.moledetection"
-        minSdkVersion 15
-        targetSdkVersion 25
+        minSdkVersion 17
+        targetSdkVersion 23
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         multiDexEnabled true
+        ndk{
+            abiFilters 'armeabi-v7a', 'armeabi', 'mips', 'x86'
+        }
         externalNativeBuild {
             cmake {
                 cppFlags "-std=c++11 -frtti -fexceptions"
-                abiFilters 'x86', 'armeabi', 'armeabi-v7a', 'mips'
+                abiFilters 'armeabi-v7a', 'armeabi', 'mips', 'x86'
+                arguments '-DANDROID_PLATFORM=android-21',
+                        '-DANDROID_TOOLCHAIN=clang', '-DANDROID_STL=gnustl_static'
             }
         }
     }
@@ -31,7 +36,7 @@ android {
     }
     sourceSets {
         main {
-            jniLibs.srcDirs = ['c:/Users/ukalwa/workspace/moledetection_v2.0/app/src/main/jniLibs']
+            jniLibs.srcDirs = ['src/main/jniLibs']
         }
     }
 }
@@ -41,8 +46,8 @@ dependencies {
     androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
-    compile 'com.android.support:appcompat-v7:25.1.1'
     testCompile 'junit:junit:4.12'
     compile project(':openCVLibrary2410')
     compile 'com.google.android.gms:play-services:10.0.1'
+//    compile 'com.android.support:appcompat-v7:22.2.1'
 }
