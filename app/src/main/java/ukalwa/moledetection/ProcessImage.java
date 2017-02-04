@@ -244,6 +244,7 @@ public class ProcessImage extends Activity {
         String roiVerticalFileName = fileWithoutExtension + "_roi_vertical.PNG";
 
         System.out.print("Original Mat created from file");
+        Log.i(TAG, "Original Mat dimensions : " + bm.getHeight() + bm.getWidth());
 
         /*
          * Active Contour Extraction process begins
@@ -304,7 +305,8 @@ public class ProcessImage extends Activity {
         luminance.copyTo(channels.get(2));
         Core.merge(channels, hsvMat);
         */
-        Toast.makeText(mContext, stringFromJNI(), Toast.LENGTH_SHORT).show();
+//        Toast.makeText(mContext, stringFromJNI(), Toast.LENGTH_SHORT).show();
+        Log.i(TAG, "Mean before Active Contour : " + Core.mean(hsvMat));
         //Calling Active Contour native method written in C++
         ActiveContour(hsvMat.getNativeObjAddr(),grMat.getNativeObjAddr(),originalMat.getNativeObjAddr());
 
@@ -313,7 +315,7 @@ public class ProcessImage extends Activity {
          * 2) Finding bounding rectangle of the contour to calculate major and minor axes of the contour
          * 3) Flip the contour in Horizontal and Vertical axes and display as 2 rows
          */
-
+        Log.i(TAG, "Mean after Active Contour : " + Core.mean(hsvMat));
         List<MatOfPoint> contours = new ArrayList<MatOfPoint>();
 
         Mat mHierarchy = new Mat();
@@ -876,5 +878,5 @@ public class ProcessImage extends Activity {
     }
 
     public native void ActiveContour(long matAddrHsv,long matAddrGr, long matAddrRgba);
-    public native String  stringFromJNI();
+//    public native String  stringFromJNI();
 }

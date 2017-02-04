@@ -12,13 +12,13 @@ android {
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         multiDexEnabled true
         ndk{
-            abiFilters 'armeabi-v7a', 'armeabi', 'mips', 'x86'
+            abiFilters 'armeabi-v7a', 'x86'
         }
         externalNativeBuild {
             cmake {
-                cppFlags "-std=c++11 -frtti -fexceptions"
-                abiFilters 'armeabi-v7a', 'armeabi', 'mips', 'x86'
-                arguments '-DANDROID_PLATFORM=android-21',
+                cppFlags "-frtti -fexceptions"
+                abiFilters 'armeabi-v7a','x86'
+                arguments '-DANDROID_PLATFORM=android-17',
                         '-DANDROID_TOOLCHAIN=clang', '-DANDROID_STL=gnustl_static'
             }
         }

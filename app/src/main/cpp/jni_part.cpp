@@ -73,9 +73,9 @@ JNIEXPORT void JNICALL Java_ukalwa_moledetection_ProcessImage_ActiveContour(JNIE
 	{
 		i = 3*iterator->get_elem();
 
-		//img1_rgb_data[i] = 0; // H
-		//img1_rgb_data[i+1] = 0; // S
-		//img1_rgb_data[i+2] = 255; // V
+		img1_rgb_data[i] = 255; // H
+		img1_rgb_data[i+1] = 255; // S
+		img1_rgb_data[i+2] = 255; // V
 
 		img1_gray_data[j]=255;
 	}
