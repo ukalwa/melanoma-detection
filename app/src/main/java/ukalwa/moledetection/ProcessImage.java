@@ -1,33 +1,8 @@
 package ukalwa.moledetection;
 
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.StringTokenizer;
-
-import org.opencv.android.BaseLoaderCallback;
-import org.opencv.android.LoaderCallbackInterface;
-import org.opencv.android.OpenCVLoader;
-import org.opencv.android.Utils;
-import org.opencv.core.Core;
-import org.opencv.core.CvType;
-import org.opencv.core.Mat;
-import org.opencv.core.MatOfPoint;
-import org.opencv.core.MatOfPoint2f;
-import org.opencv.core.Rect;
-import org.opencv.core.RotatedRect;
-import org.opencv.core.Scalar;
-import org.opencv.imgproc.Imgproc;
-import org.opencv.imgproc.Moments;
-
 import android.app.Activity;
 import android.app.ProgressDialog;
-import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -42,39 +17,51 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.ImageView;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 import android.widget.ViewFlipper;
+
+import org.opencv.android.BaseLoaderCallback;
+import org.opencv.android.LoaderCallbackInterface;
+import org.opencv.android.OpenCVLoader;
+import org.opencv.android.Utils;
+import org.opencv.core.Core;
+import org.opencv.core.CvType;
+import org.opencv.core.Mat;
+import org.opencv.core.MatOfPoint;
+import org.opencv.core.MatOfPoint2f;
+import org.opencv.core.Rect;
+import org.opencv.core.RotatedRect;
+import org.opencv.core.Scalar;
+import org.opencv.highgui.Highgui;
+import org.opencv.imgproc.Imgproc;
+import org.opencv.imgproc.Moments;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.StringTokenizer;
 
 public class ProcessImage extends Activity {
 
     protected static final String TAG = "ProcessImage::Activity";
-    private static final int SWIPE_MIN_DISTANCE = 120;
-    private static final int SWIPE_THRESHOLD_VELOCITY = 200;
     private ViewFlipper mViewFlipper;
-    private String mDir = "MoleDetection";
-    private Context mContext;
-    private long startTime,timeElapsed;
+    private long startTime;
     //private GestureDetector.OnGestureListener listener;
     //private final GestureDetector detector = new GestureDetector(mContext, listener);
 
     private String message;
-    private ImageView imageView;
     private ImageView imageViewAbove;
     private TextView textViewColor;
-    private Bitmap bm,newBmp;
     private Mat originalMat,tempMat,resultMat;
-    private Mat grayMat,hsvMat,mIntermediateMatsub,grMat,zeroMat;
-    private Mat displayMat;
-    private Mat matrixAbove;
-    private Mat colorLabel;
-    private ColorDetection colorProcess;
-    private Scalar colorsPrint[] = new Scalar[7];
-    private String fileWithContour,fileWithoutExtension;
-    private String colorsName[] = new String[7];
-    private double contoursArea = 0,horizontalAsymmetry = 0,verticalAsymmetry = 0;
-    private double contoursPerimter=0,contourLength=0;
+    private Mat grayMat;
+    private Mat hsvMat;
+    private Mat grMat;
+    private String fileWithContour;
+    private double contoursArea = 0;
 
     private BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this) {
         @Override
@@ -102,23 +89,15 @@ public class ProcessImage extends Activity {
     private ImageView imageView2;
     private ImageView imageView3;
     private ImageView imageView4;
-    private Bitmap imagebmp1;
-    private Bitmap imagebmp2;
     private TextView imageTitleText1;
     private TextView imageTitleText3;
     private TextView imageTitleText2;
     private TextView imageTitleText4;
-    private Bitmap imagebmp4;
-    private Bitmap imagebmp5,aboveBmp;
-    private RelativeLayout layout4;
     private ProgressDialog pDialog;
     private TextView resultView;
     private TextView resultTitle;
     private ImageView imageView5;
     private ImageView resultImage;
-    private Bitmap resultimgbmp;
-    //private TextView resultView1;
-    //private TextView resultView2;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -126,7 +105,6 @@ public class ProcessImage extends Activity {
         startTime = System.currentTimeMillis();
         pDialog = ProgressDialog.show(this, "Loading Data", "Please Wait...", true);
         setContentView(R.layout.activity_process_image);
-        mContext = this;
         mViewFlipper = (ViewFlipper) this.findViewById(R.id.view_flipper);
 
         PreviousBtn = (Button) findViewById(R.id.previousbutton);
@@ -186,26 +164,24 @@ public class ProcessImage extends Activity {
         Intent intent = getIntent();
         message = intent.getStringExtra(GetPreviousPictures.FILEPATH);
 
-
-
-
-        colorsPrint[1] = new Scalar(240,0,63,255);
-        colorsPrint[2] = new Scalar(0,255,255,255);
-        colorsPrint[3] = new Scalar(0,0,204,255);
-        colorsPrint[4] = new Scalar(0,0,0,255);
-        colorsPrint[5] = new Scalar(0,153,0,255);
-        colorsPrint[6] = new Scalar(255,255,0,255);
-
-
-
-
-
-        colorsName[1] = "BLACK";
-        colorsName[2] = "LIGHT-BROWN";
-        colorsName[3] = "DARK-BROWN";
-        colorsName[4] = "RED";
-        colorsName[5] = "GRAY";
-        colorsName[6] = "WHITE";
+//        Scalar colorsPrint[] = new Scalar[7];
+//        colorsPrint[1] = new Scalar(240,0,63,255);
+//        colorsPrint[2] = new Scalar(0,255,255,255);
+//        colorsPrint[3] = new Scalar(0,0,204,255);
+//        colorsPrint[4] = new Scalar(0,0,0,255);
+//        colorsPrint[5] = new Scalar(0,153,0,255);
+//        colorsPrint[6] = new Scalar(255,255,0,255);
+//
+//
+//
+//
+//        String colorsName[] = new String[7];
+//        colorsName[1] = "BLACK";
+//        colorsName[2] = "LIGHT-BROWN";
+//        colorsName[3] = "DARK-BROWN";
+//        colorsName[4] = "RED";
+//        colorsName[5] = "GRAY";
+//        colorsName[6] = "WHITE";
 
         imageView1 = (ImageView) findViewById(R.id.image1);
         imageView2 = (ImageView) findViewById(R.id.image2);
@@ -232,12 +208,19 @@ public class ProcessImage extends Activity {
         StringTokenizer str = new StringTokenizer(message, ".");
         //Log.i(TAG, "strToken1 : " + str.nextToken());
         //Log.i(TAG, "strToken2 : " + str.nextToken());
-        bm = BitmapFactory.decodeFile(message); //Extract Image from the path sent in intent message
-        originalMat = new Mat(bm.getHeight(),bm.getWidth(),CvType.CV_8UC3);
+        Bitmap bm = BitmapFactory.decodeFile(message);
+        originalMat = new Mat(bm.getHeight(), bm.getWidth(),CvType.CV_8UC3);
         Utils.bitmapToMat(bm, originalMat); //Convert Image to Mat for OpenCV operations
+        Mat img = Highgui.imread(message);
+        Log.i(TAG, "img dims : " + img.channels() + img.width() + img.height());
+        Log.i(TAG, "Original Mat dims : " + originalMat.channels() + originalMat.width() + originalMat.height());
+//        Mat res =  new Mat(originalMat.size(),CvType.CV_8UC3);
+//        Core.compare(img, originalMat, res, Core.CMP_EQ);
 
-        fileWithoutExtension = str.nextToken() + "_" + android.text.format.DateFormat.format("yyyy_MM_dd", new java.util.Date()) ;
+        String fileWithoutExtension = str.nextToken() + "_" + android.text.format.DateFormat.format("yyyy_MM_dd", new java.util.Date());
         fileWithContour = fileWithoutExtension + ".PNG";
+//        Highgui.imwrite(fileWithoutExtension+"2.jpg",img);
+//        Highgui.imwrite(fileWithoutExtension+"res.jpg", res);
         String segmentedImage = fileWithoutExtension + "_segmented.PNG";
         String warpedImage = fileWithoutExtension + "_warped.PNG";
         String roiHorizontalFileName = fileWithoutExtension + "_roi_horizontal.PNG";
@@ -255,22 +238,10 @@ public class ProcessImage extends Activity {
         grayMat = new Mat(originalMat.size(),CvType.CV_8UC1);
 
         hsvMat = new Mat(originalMat.size(),CvType.CV_8UC3);
-        mIntermediateMatsub = new Mat(originalMat.size(),CvType.CV_8UC3);
 
         grMat = Mat.zeros(originalMat.size(), CvType.CV_8UC1);
         //displayMat = originalMat.clone();
-        zeroMat = Mat.zeros(originalMat.size(), CvType.CV_8UC1);
         Imgproc.cvtColor(originalMat, grayMat, Imgproc.COLOR_BGR2GRAY);				//Initialize gray image from original Image
-//
-//        //Morphological operations on the images to reduce noise with 3x3 kernel
-//        Imgproc.dilate(grayMat, grayMat, new Mat(3,3,CvType.CV_8UC1));
-//        Imgproc.erode(grayMat, grayMat, new Mat(3,3,CvType.CV_8UC1));
-//
-//        //Canny with threshold multiplier of 2 and morphological operations with 5x5 kernel
-//        Imgproc.Canny(grayMat, grayMat, 50, 50*2);
-//        Imgproc.dilate(originalMat, mIntermediateMatsub,new Mat(5,5,CvType.CV_8UC1));
-//        Imgproc.erode(mIntermediateMatsub, originalMat,new Mat(5,5,CvType.CV_8UC1));
-//
         Imgproc.cvtColor(originalMat, hsvMat, Imgproc.COLOR_BGR2HSV);
 
         if(new File(fileWithContour).exists()){
@@ -316,14 +287,13 @@ public class ProcessImage extends Activity {
          * 3) Flip the contour in Horizontal and Vertical axes and display as 2 rows
          */
         Log.i(TAG, "Mean after Active Contour : " + Core.mean(hsvMat));
-        List<MatOfPoint> contours = new ArrayList<MatOfPoint>();
+        List<MatOfPoint> contours = new ArrayList<>();
 
         Mat mHierarchy = new Mat();
         double maxArea = -1;
         int maxAreaIdx = -1;
-        List<Mat> contoursMat= new ArrayList<Mat>();
 
-        RotatedRect ellipse = null;
+        RotatedRect ellipse;
         MatOfPoint2f point2F;
         Imgproc.findContours(grMat, contours, mHierarchy, Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_SIMPLE);
         Log.i(TAG, "Contours size : " + contours.size());
@@ -335,7 +305,6 @@ public class ProcessImage extends Activity {
         else {
             for (int idx = 0; idx < contours.size(); idx++) {
                 Mat contour = contours.get(idx);
-                contoursMat.add(contour);
                 double contourarea = Imgproc.contourArea(contour);
                 if (contourarea > maxArea) {
                     maxArea = contourarea;
@@ -351,14 +320,14 @@ public class ProcessImage extends Activity {
 
             ///////// Init //// Color detection /////////////////////
             MatOfPoint contour = contours.get(maxAreaIdx);
-            int nColors = 0;
-            matrixAbove = Mat.zeros(originalMat.size(), CvType.CV_8UC3);
+            int nColors;
+            Mat matrixAbove = Mat.zeros(originalMat.size(), CvType.CV_8UC3);
             Mat tempMat2 = Mat.zeros(originalMat.size(), CvType.CV_8UC3);
             Log.i(TAG, "Image View height : " + imageViewAbove.getHeight() + " Image View Width : " + imageViewAbove.getWidth());
             Log.i(TAG, "Mat Above" + matrixAbove.size() + " Help Matrix: " + tempMat2.size());
             Core.bitwise_not(tempMat2, matrixAbove);
             tempMat2.release();
-            Mat helpMatrix = matrixAbove.clone();
+//            Mat helpMatrix = matrixAbove.clone();
 
             //remove back ground of the mole
             Mat maskZero = Mat.zeros(tempMat.size(), CvType.CV_8UC1);
@@ -366,7 +335,8 @@ public class ProcessImage extends Activity {
             Mat tempBlack = new Mat(tempMat.size(), tempMat.type());
             tempMat.copyTo(tempBlack, maskZero);
 
-            colorProcess = new ColorDetection(originalMat.clone());
+            ColorDetection colorProcess = new ColorDetection(originalMat.clone());
+
             Moments p = Imgproc.moments(contours.get(maxAreaIdx));
             int xCenter = (int) (p.get_m10() / p.get_m00());
             int yCenter = (int) (p.get_m01() / p.get_m00());
@@ -374,12 +344,25 @@ public class ProcessImage extends Activity {
             colorProcess.setMoleWithoutBackground(tempBlack);
             colorProcess.setContourMole(contours.get(maxAreaIdx));
             colorProcess.setRect(r);
-            colorProcess.setMatrixAbove(helpMatrix);
+            colorProcess.setMatrixAbove(matrixAbove);
+
+            // My additions
+            colorProcess.setContourArea(maxArea);
+            double tolerance = 30;
+            double value_threshold = Core.mean(hsvMat).val[2] - tolerance;
+            Log.i(TAG, "Mean" + String.valueOf(value_threshold));
+            colorProcess.setValueThreshold(value_threshold);
+            Mat maskImg = new Mat(img.size(), img.type());
+            Mat colorImg = img.clone();
+            img.copyTo(maskImg, maskZero);
+            colorProcess.setImg(maskImg);
+            colorProcess.getAllColorContours(maskImg, colorImg);
+            Highgui.imwrite(fileWithoutExtension +"_colors_new.PNG", colorImg);
 
             colorProcess.colorProcessImage();
             Mat colorMat = colorProcess.getColorProcessImage();
             //originalMat = colorProcess.getColorOftheImage();
-            helpMatrix = colorProcess.getMatrixAbove();
+            matrixAbove = colorProcess.getMatrixAbove();
             nColors = colorProcess.getNumberOfColors();
             Imgproc.drawContours(colorMat, contours, maxAreaIdx, new Scalar(255, 255, 255, 255), 2);
 
@@ -397,17 +380,17 @@ public class ProcessImage extends Activity {
             double taThreshold = 0.1;
             int abruptEdges = 0;
             for (int i = 1; i < 9; i++) {
-                border = new ArrayList<MatOfPoint>();
+//                border = new ArrayList<>();
                 border = colorProcess.getContoursPartMole(contours, i);
                 //Imgproc.drawContours(originalMat, border, colorProcess.maxArea(border), new Scalar(0,153,0,255), 1); // green
                 areaContourPart = colorProcess.getContoursArea(border);
 
-                border = new ArrayList<MatOfPoint>();
+//                border = new ArrayList<MatOfPoint>();
                 border = colorProcess.getContoursPartMole(cAbruptEdgeColor, i);
                 //Imgproc.drawContours(originalMat, border, colorProcess.maxArea(border), new Scalar(0,0,204,255), 1); //dark blue
                 areaColorPart = colorProcess.getContoursArea(border);
 
-                if (1 - (double) (areaContourPart / areaColorPart) <= taThreshold) {
+                if (1 - areaContourPart / areaColorPart <= taThreshold) {
                     abruptEdges++;
                 }
             }
@@ -420,7 +403,7 @@ public class ProcessImage extends Activity {
 
             //contourLength = contours.size();
 
-            displayMat = Mat.zeros(originalMat.size(), CvType.CV_8UC3);
+            Mat displayMat = Mat.zeros(originalMat.size(), CvType.CV_8UC3);
             Core.bitwise_not(displayMat, displayMat);
             tempMat.copyTo(displayMat, maskZero);
             double angle = ellipse.angle;
@@ -431,7 +414,7 @@ public class ProcessImage extends Activity {
                 if (angle > 90)
                     angle += 90;
             }
-            RotatedRect rot = Imgproc.minAreaRect(point2F);
+//            RotatedRect rot = Imgproc.minAreaRect(point2F);
             Mat rot_mat = Imgproc.getRotationMatrix2D(ellipse.center, angle, 1);
 
             //Added to clear blank asymmetry images
@@ -441,7 +424,7 @@ public class ProcessImage extends Activity {
             //end
 
 
-            List<MatOfPoint> contours_rot = new ArrayList<MatOfPoint>();
+            List<MatOfPoint> contours_rot = new ArrayList<>();
             Mat mHierarchy_rot = new Mat();
             Mat grImage_rot = new Mat();
             //Mat displayMatOriginal = Mat.zeros(originalMat.size(), CvType.CV_8UC3);
@@ -472,7 +455,7 @@ public class ProcessImage extends Activity {
             //***************
             Imgproc.getRectSubPix(displayMat, ellipse.size, ellipse.center, croppedMat);
             Imgproc.drawContours(originalMat, contours, maxAreaIdx, new Scalar(255, 255, 255, 255), 2);
-            imagebmp1 = Bitmap.createBitmap(originalMat.cols(), originalMat.rows(), Bitmap.Config.ARGB_8888);
+            Bitmap imagebmp1 = Bitmap.createBitmap(originalMat.cols(), originalMat.rows(), Bitmap.Config.ARGB_8888);
             Utils.matToBitmap(originalMat, imagebmp1);
             imageView1.setImageBitmap(imagebmp1);
             imageTitleText1.setText("Original Image with Contour");
@@ -490,7 +473,7 @@ public class ProcessImage extends Activity {
             //Imgproc.drawContours(tempMat, contours, maxAreaIdx, new Scalar(0,0,204,255), 2);	//violet cycles = 100
             //MinMaxLocResult minMaxPoints = Core.minMaxLoc(grMat);
 
-            imagebmp2 = Bitmap.createBitmap(displayMatOriginal.cols(), displayMatOriginal.rows(), Bitmap.Config.ARGB_8888);
+            Bitmap imagebmp2 = Bitmap.createBitmap(displayMatOriginal.cols(), displayMatOriginal.rows(), Bitmap.Config.ARGB_8888);
             Utils.matToBitmap(displayMatOriginal, imagebmp2);
             imageView2.setImageBitmap(imagebmp2);
             //imageTitleText2.setText("Extracted Contour");
@@ -503,16 +486,15 @@ public class ProcessImage extends Activity {
             int maxAreaIdx_rot = -1;
             for (int idx = 0; idx < contours_rot.size(); idx++) {
                 Mat contour_rot = contours_rot.get(idx);
-                contoursMat.add(contour_rot);
                 double contourarea = Imgproc.contourArea(contour_rot);
                 if (contourarea > maxArea_rot) {
-                    maxArea = contourarea;
+                    maxArea_rot = contourarea;
                     maxAreaIdx_rot = idx;
                 }
             }
 
             Log.i(TAG, "Contours size : " + contours_rot.size() + "Max Area Index : " + maxAreaIdx_rot);
-            r = Imgproc.boundingRect(contours_rot.get(maxAreaIdx_rot));
+//            r = Imgproc.boundingRect(contours_rot.get(maxAreaIdx_rot));
             //Core.rectangle(zeroMat, r.tl(), r.br(), new Scalar(255,255,255));
             //Imgproc.drawContours(zeroMat, contours_rot, maxAreaIdx_rot, new Scalar(255,255,255,255), -1);
 
@@ -557,11 +539,11 @@ public class ProcessImage extends Activity {
             MatOfPoint2f curve = new MatOfPoint2f(contour.toArray());
             contoursArea += Imgproc.contourArea(contour);
             // = Core.countNonZero(contourRegion);
-            contoursPerimter = Imgproc.arcLength(curve, true);
+            double contoursPerimter = Imgproc.arcLength(curve, true);
             //contoursPerimter = Core.countNonZero(grMat);
             //contoursPerimter = Core.countNonZero(grMat);
-            horizontalAsymmetry = Core.countNonZero(roiHorizontal);
-            verticalAsymmetry = Core.countNonZero(roiVertical);
+            double horizontalAsymmetry = Core.countNonZero(roiHorizontal);
+            double verticalAsymmetry = Core.countNonZero(roiVertical);
 
       /*Imgproc.findContours(roiHorizontal, contours, mHierarchy, Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_SIMPLE);
         for(int a = 0; a < contours.size(); a++){
@@ -598,7 +580,7 @@ public class ProcessImage extends Activity {
             //***************
             //Core.line(roiVertical, new Point(r.x + r.x/2, r.y),new Point(r.x + r.x/2, 2*r.y), new Scalar(255,255,255));
             Core.bitwise_not(roiVertical, roiVertical);
-            imagebmp4 = Bitmap.createBitmap(roiVertical.cols(), roiVertical.rows(), Bitmap.Config.ARGB_8888);
+            Bitmap imagebmp4 = Bitmap.createBitmap(roiVertical.cols(), roiVertical.rows(), Bitmap.Config.ARGB_8888);
             Utils.matToBitmap(roiVertical, imagebmp4);
             imageView4.setImageBitmap(imagebmp4);
             imageTitleText4.setText("Vertical Asymmetry");
@@ -609,7 +591,7 @@ public class ProcessImage extends Activity {
             //Core.line(roiHorizontal, new Point(r.x-r.x/2, r.y - r.y/2),new Point(2*r.x, r.y - r.y/2), new Scalar(255,255,255));
             Core.bitwise_not(roiHorizontal, roiHorizontal);
             resultMat = roiHorizontal.clone();
-            newBmp = Bitmap.createBitmap(resultMat.cols(), resultMat.rows(), Bitmap.Config.ARGB_8888);
+            Bitmap newBmp = Bitmap.createBitmap(resultMat.cols(), resultMat.rows(), Bitmap.Config.ARGB_8888);
             Utils.matToBitmap(roiHorizontal, newBmp);
             imageView3.setImageBitmap(newBmp);
             imageTitleText3.setText("Horizontal Asymmetry");
@@ -617,12 +599,12 @@ public class ProcessImage extends Activity {
             //***************
             //Color Detection
             //***************
-            aboveBmp = Bitmap.createBitmap(matrixAbove.cols(), matrixAbove.rows(), Bitmap.Config.ARGB_8888);
-            if (!helpMatrix.empty())
-                helpMatrix.copyTo(matrixAbove);
+            Bitmap aboveBmp = Bitmap.createBitmap(matrixAbove.cols(), matrixAbove.rows(), Bitmap.Config.ARGB_8888);
+            if (!matrixAbove.empty())
+                matrixAbove.copyTo(matrixAbove);
             Utils.matToBitmap(matrixAbove, aboveBmp);
             imageViewAbove.setImageBitmap(aboveBmp);
-            imagebmp5 = Bitmap.createBitmap(colorMat.cols(), colorMat.rows(), Bitmap.Config.ARGB_8888);
+            Bitmap imagebmp5 = Bitmap.createBitmap(colorMat.cols(), colorMat.rows(), Bitmap.Config.ARGB_8888);
             Utils.matToBitmap(colorMat, imagebmp5);
             imageView5.setImageBitmap(imagebmp5);
             //textViewColor.setText("Horizontal Asymmetry");
@@ -632,13 +614,13 @@ public class ProcessImage extends Activity {
          * Publishing results in result view
          */
             //***************
-            resultimgbmp = Bitmap.createBitmap(colorMat.cols(), colorMat.rows(), Bitmap.Config.ARGB_8888);
+            Bitmap resultimgbmp = Bitmap.createBitmap(colorMat.cols(), colorMat.rows(), Bitmap.Config.ARGB_8888);
             Utils.matToBitmap(colorMat, resultimgbmp);
             resultImage.setImageBitmap(resultimgbmp);
 
 
             int lengthIdxStrt = 0;
-            int lengthIdxEnd = 0;
+            int lengthIdxEnd;
             SpannableStringBuilder content = new SpannableStringBuilder();
             //StringBuilder sb = new StringBuilder();
             content.append("Image id : ")
@@ -713,7 +695,7 @@ public class ProcessImage extends Activity {
             mHierarchy_rot.release();
             grImage_rot.release();
 
-            timeElapsed = (System.currentTimeMillis() - startTime);
+            long timeElapsed = (System.currentTimeMillis() - startTime);
 
             lengthIdxStrt = content.length();
             content.append("\nTime Elapsed : ").append(Long.toString(timeElapsed / 1000)).append(" seconds");
@@ -732,7 +714,6 @@ public class ProcessImage extends Activity {
             //**************
             SpannableStringBuilder left_content = new SpannableStringBuilder();
             lengthIdxStrt = 0;
-            lengthIdxEnd = 0;
 
             left_content.append("Asymmetry : ")
                     .append("2").append("\n");
@@ -791,28 +772,28 @@ public class ProcessImage extends Activity {
             writeToFile(fileWithoutExtension, content.toString());
 
             Bitmap bm2 = Bitmap.createBitmap(tempMat.cols(), tempMat.rows(), Bitmap.Config.ARGB_8888);
-            ;
+
             Utils.matToBitmap(tempMat, bm2);
 
             //saveImage(fileWithContour, bm2);
 
             Bitmap roi_horizontal_bm = Bitmap.createBitmap(roiHorizontal.cols(), roiHorizontal.rows(), Bitmap.Config.ARGB_8888);
-            ;
+
             Utils.matToBitmap(roiHorizontal, roi_horizontal_bm);
             saveImage(roiHorizontalFileName, roi_horizontal_bm);
 
             Bitmap warp_bm = Bitmap.createBitmap(warpedMat.cols(), warpedMat.rows(), Bitmap.Config.ARGB_8888);
-            ;
+
             Utils.matToBitmap(warpedMat, warp_bm);
             saveImage(warpedImage, warp_bm);
 
             Bitmap seg_bm = Bitmap.createBitmap(displayMatOriginal.cols(), displayMatOriginal.rows(), Bitmap.Config.ARGB_8888);
-            ;
+
             Utils.matToBitmap(displayMatOriginal, seg_bm);
             saveImage(segmentedImage, seg_bm);
 
             Bitmap roi_vertical_bm = Bitmap.createBitmap(roiVertical.cols(), roiVertical.rows(), Bitmap.Config.ARGB_8888);
-            ;
+
             Utils.matToBitmap(roiVertical, roi_vertical_bm);
             saveImage(roiVerticalFileName, roi_vertical_bm);
         }

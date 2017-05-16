@@ -1,11 +1,5 @@
 package ukalwa.moledetection;
 
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FilenameFilter;
-import java.util.ArrayList;
-import java.util.List;
-
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -14,8 +8,8 @@ import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.os.Environment;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.View.OnClickListener;
+import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.BaseAdapter;
@@ -23,15 +17,19 @@ import android.widget.Button;
 import android.widget.GridView;
 import android.widget.ImageView;
 
-import static android.widget.Toast.*;
+import java.io.File;
+import java.io.FilenameFilter;
+import java.util.ArrayList;
+import java.util.List;
+
+import static android.widget.Toast.LENGTH_SHORT;
+import static android.widget.Toast.makeText;
 
 public class GetPreviousPictures extends Activity {
 	public final static String FILEPATH = "MESSAGE";
     private static final String mDirName = "MoleDetection";
 	List<String> tFileList;
     public Bitmap bm;
-    ByteArrayOutputStream baos;
-    ImageView jpgView;
     File f;
     File[] files;
     ImageView imageView;
@@ -133,7 +131,7 @@ public class GetPreviousPictures extends Activity {
 	}
 
     private List<String> ReadSDCard() {
-        tFileList = new ArrayList<String>();
+        tFileList = new ArrayList<>();
 
         // It have to be matched with the directory in SDCard
         //f = new File("/data/digitechimages");// Here you take your specific folder//
@@ -142,12 +140,11 @@ public class GetPreviousPictures extends Activity {
         files = f.listFiles(new FilenameFilter() {
             @Override
             public boolean accept(File dir, String name) {
-                return ((name.endsWith(".jpg")) || (name.endsWith(".JPG")) ||(name.endsWith(".png") || (name.endsWith(".PNG"))));
+                return ((name.endsWith(".jpg")) || (name.endsWith(".JPG")) ||(name.endsWith(".png")));
             }
         });
         if (files != null) {
-            for (int i = 0; i < files.length; i++) {
-                File file = files[i];
+            for (File file : files) {
                 /*
                  * It's assumed that all file in the path are in supported type
                  */
@@ -161,11 +158,10 @@ public class GetPreviousPictures extends Activity {
     }
 
     public class ImageAdapter extends BaseAdapter {
-        int mGalleryItemBackground;
         private Context mContext;
         private List<String> FileList;
 
-        public ImageAdapter(Context c, List<String> fList) {
+        ImageAdapter(Context c, List<String> fList) {
             mContext = c;
             FileList = fList;
         }
@@ -186,8 +182,7 @@ public class GetPreviousPictures extends Activity {
             ImageView imageView;
             if (convertView == null) {
                 imageView = new ImageView(mContext);
-                Bitmap bm = BitmapFactory.decodeFile(FileList.get(position)
-                        .toString());
+                Bitmap bm = BitmapFactory.decodeFile(FileList.get(position));
                 imageView.setImageBitmap(bm);
                 // imageView.setImageResource(FileList[position]);
                 imageView.setLayoutParams(new GridView.LayoutParams(175, 175));

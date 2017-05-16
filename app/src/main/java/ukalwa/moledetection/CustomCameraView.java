@@ -26,10 +26,6 @@ public class CustomCameraView extends JavaCameraView implements PictureCallback 
         return mCamera.getParameters().getSupportedColorEffects();
     }
 
-    public boolean isEffectSupported() {
-        return (mCamera.getParameters().getColorEffect() != null);
-    }
-
     public String getEffect() {
         return mCamera.getParameters().getColorEffect();
     }
@@ -53,17 +49,6 @@ public class CustomCameraView extends JavaCameraView implements PictureCallback 
 
     public Size getResolution() {
         return mCamera.getParameters().getPreviewSize();
-    }
-
-    public void takePicture(final String fileName) {
-        Log.i(TAG, "Taking picture");
-        this.mPictureFileName = fileName;
-        // Postview and jpeg are sent in the same buffers if the queue is not empty when performing a capture.
-        // Clear up buffers to avoid mCamera.takePicture to be stuck because of a memory issue
-        mCamera.setPreviewCallback(null);
-
-        // PictureCallback is implemented by the current class
-        mCamera.takePicture(null, null, this);
     }
 
     @Override

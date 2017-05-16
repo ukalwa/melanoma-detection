@@ -15,8 +15,9 @@ package ukalwa.moledetection;
 
 //import java.awt.Color;
 import java.util.ArrayList;
-import java.util.Iterator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
@@ -37,6 +38,8 @@ import android.util.Log;
 public class ColorDetection{
 
 	private Mat	originalImage;
+	private Mat	img;
+    private double value_threshold;
 	private Mat	notBackground;
 	private List<Point> colorPoints = new ArrayList<Point>();
 	private List<Double> areaContoursPoints = new ArrayList<Double>();
@@ -48,6 +51,8 @@ public class ColorDetection{
 	private Mat	imageHelpColor;
 	private Mat	countoursImage;
 	private MatOfPoint countourMole;
+    private double contourArea;
+    private int thickness = 2;
 
 
 	private Mat helpMatrix;
@@ -71,6 +76,10 @@ public class ColorDetection{
 	ColorDetection(){
 
 	}
+
+    public void setImg(Mat img){
+        this.img = img;
+    }
 
 	/**
 	 * public void newImage(Mat	mRgba)
@@ -1770,15 +1779,7 @@ public class ColorDetection{
 		return contoursColor;
 	}
 
-	/**
-	 * Get the countours of black color in the mole
-	 */
-	public List<MatOfPoint> getBlackContour()
-	{
-		return getBlackContour(originalImage.clone());
-	}
-
-	/**
+    /**
 	 * Get the countours of light brown color in the mole
 	 */
 	public List<MatOfPoint> getLightBrownContour(Mat imageProcess)
@@ -1790,7 +1791,11 @@ public class ColorDetection{
 		Mat mHierarchy = new Mat();
 		List<MatOfPoint> contoursColor = new ArrayList<MatOfPoint>();
 
-		Imgproc.cvtColor(imageProcess, mHsvMat, Imgproc.COLOR_RGB2HSV_FULL);  // convert input-image to HSV-image
+        //		Imgproc.cvtColor(imageProcess, mHsvMat, Imgproc.COLOR_RGB2HSV_FULL);  // convert input-image to HSV-image
+        Imgproc.cvtColor(imageProcess, mHsvMat, Imgproc.COLOR_BGR2HSV);
+
+
+
 
 				    /*
 		        	List<MatOfPoint> contours2 = new ArrayList<MatOfPoint>();
@@ -1804,40 +1809,33 @@ public class ColorDetection{
 		        	*/
 
 
-		List<MatOfPoint> contours2 = new ArrayList<MatOfPoint>();
-		Core.inRange(mHsvMat.submat(r), new Scalar(0, 5, 5, 0), new Scalar(13, 160, 160, 255), mMask);//table 2
-		Imgproc.findContours(mMask, contoursColor, mHierarchy, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
+        //Range of the color
+        List<MatOfPoint> contours2 = new ArrayList<MatOfPoint>();
+        Core.inRange(mHsvMat.submat(r), new Scalar(0,80,166), new Scalar(15,255,255), mMask);
+		Imgproc.findContours(mMask, contoursColor, mHierarchy, Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_NONE);
 
-		contours2 = new ArrayList<MatOfPoint>();
-		Core.inRange(mHsvMat.submat(r), new Scalar(13,5,5, 0), new Scalar(250,225,225, 255), mMask);//table 2
-		Imgproc.findContours(mMask, contours2, mHierarchy, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
-		addCoutoursListToOther(contoursColor, contours2);
-
-		contours2 = new ArrayList<MatOfPoint>();
-		Core.inRange(mHsvMat.submat(r), new Scalar(250,5,5, 0), new Scalar(360,160,160, 255), mMask);//table 2
-		Imgproc.findContours(mMask, contours2, mHierarchy, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
-		addCoutoursListToOther(contoursColor, contours2);
-
+//		contours2 = new ArrayList<MatOfPoint>();
+//		Core.inRange(mHsvMat.submat(r), new Scalar(13,5,5, 0), new Scalar(250,225,225, 255), mMask);//table 2
+//		Imgproc.findContours(mMask, contours2, mHierarchy, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
+//		addCoutoursListToOther(contoursColor, contours2);
+//
+//		contours2 = new ArrayList<MatOfPoint>();
+//		Core.inRange(mHsvMat.submat(r), new Scalar(250,5,5, 0), new Scalar(360,160,160, 255), mMask);//table 2
+//		Imgproc.findContours(mMask, contours2, mHierarchy, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
+//		addCoutoursListToOther(contoursColor, contours2);
+//
 
 		mMask = Mat.zeros(imageProcess.submat(r).size(), CvType.CV_8UC1);
 		Imgproc.drawContours(mMask, contoursColor, -1, new Scalar(255,255,255,255) ,-1);
 		Imgproc.findContours(mMask, contoursColor, mHierarchy, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
-		Log.i("INTERNAL", "contoursColor" + contoursColor.size());
+		Log.i("INTERNAL", "Light Brown contoursColor" + contoursColor.size());
 
 		mHsvMat.release();		mMask.release();	mHierarchy.release();	imageProcess.release();
 
 		return contoursColor;
 	}
 
-	/**
-	 * Get the countours of light brown color in the mole
-	 */
-	public List<MatOfPoint> getLightBrownContour()
-	{
-		return getLightBrownContour(notBackground.clone());
-	}
-
-	/**
+    /**
 	 * Get the countours of dark brown color in the mole
 	 */
 	public List<MatOfPoint> getDarkBrownContour(Mat imageProcess)
@@ -1849,45 +1847,39 @@ public class ColorDetection{
 		Mat mHierarchy = new Mat();
 		List<MatOfPoint> contoursColor = new ArrayList<MatOfPoint>();
 
-		Imgproc.cvtColor(imageProcess, mHsvMat, Imgproc.COLOR_RGB2HSV_FULL);  // convert input-image to HSV-image
+//		Imgproc.cvtColor(imageProcess, mHsvMat, Imgproc.COLOR_RGB2HSV_FULL);  // convert input-image to HSV-image
+        Imgproc.cvtColor(imageProcess, mHsvMat, Imgproc.COLOR_BGR2HSV);
 
 
 		//Range of the color
 		List<MatOfPoint> contours2 = new ArrayList<MatOfPoint>();
-		Core.inRange(mHsvMat.submat(r), new Scalar(0, 5, 5, 0), new Scalar(130, 225, 120, 255), mMask);//table 2
+		Core.inRange(mHsvMat.submat(r), new Scalar(0,80,0), new Scalar(15,255,160), mMask);//table 2
 		Imgproc.findContours(mMask, contoursColor, mHierarchy, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
-
-
-		contours2 = new ArrayList<MatOfPoint>();
-		Core.inRange(mHsvMat.submat(r), new Scalar(130, 5, 5, 0), new Scalar(280, 225, 50, 255), mMask);//table 2
-		Imgproc.findContours(mMask, contours2, mHierarchy, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
-		addCoutoursListToOther(contoursColor, contours2);
-
-
-		contours2 = new ArrayList<MatOfPoint>();
-		Core.inRange(mHsvMat.submat(r), new Scalar(280, 5, 5, 0), new Scalar(360, 225, 100, 255), mMask);//table 2
-		Imgproc.findContours(mMask, contours2, mHierarchy, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
-		addCoutoursListToOther(contoursColor, contours2);
-		///
+//
+//
+//		contours2 = new ArrayList<MatOfPoint>();
+//		Core.inRange(mHsvMat.submat(r), new Scalar(130, 5, 5, 0), new Scalar(280, 225, 50, 255), mMask);//table 2
+//		Imgproc.findContours(mMask, contours2, mHierarchy, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
+//		addCoutoursListToOther(contoursColor, contours2);
+//
+//
+//		contours2 = new ArrayList<MatOfPoint>();
+//		Core.inRange(mHsvMat.submat(r), new Scalar(280, 5, 5, 0), new Scalar(360, 225, 100, 255), mMask);//table 2
+//		Imgproc.findContours(mMask, contours2, mHierarchy, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
+//		addCoutoursListToOther(contoursColor, contours2);
+//		///
 
 		mMask = Mat.zeros(imageProcess.submat(r).size(), CvType.CV_8UC1);
 		Imgproc.drawContours(mMask, contoursColor, -1, new Scalar(255,255,255,255) ,-1);
 		Imgproc.findContours(mMask, contoursColor, mHierarchy, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
 
 		mHsvMat.release();		mMask.release();	mHierarchy.release();	imageProcess.release();
+        Log.i("INTERNAL", "Dark Brown contoursColor" + contoursColor.size());
 
 		return contoursColor;
 	}
 
-	/**
-	 * Get the countours of dark brown color in the mole
-	 */
-	public List<MatOfPoint> getDarkBrownContour()
-	{
-		return getDarkBrownContour(notBackground.clone());
-	}
-
-	/**
+    /**
 	 * Get the countours of red color in the mole
 	 */
 	public List<MatOfPoint> getRedContour(Mat imageProcess)
@@ -1945,15 +1937,7 @@ public class ColorDetection{
 		return contoursColor;
 	}
 
-	/**
-	 * Get the countours of red color in the mole
-	 */
-	public List<MatOfPoint> getRedContour()
-	{
-		return getRedContour(notBackground.clone());
-	}
-
-	/**
+    /**
 	 * Get the countours of blue gray color in the mole
 	 */
 	public List<MatOfPoint> getBlueContour(Mat imageProcess)
@@ -1981,15 +1965,7 @@ public class ColorDetection{
 		return contoursColor;
 	}
 
-	/**
-	 * Get the countours of blue gray color in the mole
-	 */
-	public List<MatOfPoint> getBlueContour()
-	{
-		return getBlueContour(notBackground.clone());
-	}
-
-	/**
+    /**
 	 * Get the countours of white color in the mole
 	 */
 	public List<MatOfPoint> getWhiteContour(Mat imageProcess)
@@ -2036,18 +2012,8 @@ public class ColorDetection{
 		return contoursColor;
 	}
 
-	/**
-	 * Get the countours of white color in the mole
-	 */
-	public List<MatOfPoint> getWhiteContour()
-	{
-		return getWhiteContour(notBackground.clone());
-	}
 
-
-
-
-	/**
+    /**
 	 * Get the countours of white color in the mole
 	 */
 	public void colorProcessImage()
@@ -2076,7 +2042,7 @@ public class ColorDetection{
 			addCoutoursListToOther(countoursAbruptColor, contoursColor);
 		}
 
-		contoursColor = getDarkBrownContour(imageHelpColor.clone());
+		contoursColor = getDarkBrownContour(img.clone());
 		if(setColorFind(contoursColor)){
 			removeTotalColorOftheImage(contoursColor);//removeColorOftheImage(contoursColor);
 			drawBiggestsCountours(countoursImage, contoursColor, toDarkBrownColor,sizeLineC);//Imgproc.drawContours(countoursImage.submat(r), contoursColor, maxArea, toDarkBrownColor,1);
@@ -2104,7 +2070,7 @@ public class ColorDetection{
 		}
 
 
-		contoursColor = getLightBrownContour(imageHelpColor.clone());
+		contoursColor = getLightBrownContour(img.clone());
 		if(setColorFindWithoutRemove(contoursColor)){
 			//removeTotalColorOftheImage(contoursColor);//removeColorOftheImage(contoursColor);
 			drawBiggestsCountours(countoursImage, contoursColor, toLightBrownColor,sizeLineC);//Imgproc.drawContours(countoursImage.submat(r), contoursColor, maxArea, toLightBrownColor,1);
@@ -2440,24 +2406,8 @@ public class ColorDetection{
 
 	}
 
-	/**
-	 * Get the countours of white color in the mole
-	 * @param
-	 * 	coutoursRemove ->  the contours that want to remove the biggest area of the image help
-	 * 	areaRemove -> area that want to remove
-	 */
-	private void removeColorOftheImage(List<MatOfPoint> coutoursRemove, int areaRemove)
-	{
-		Rect r = getRect();
-		Mat maskZero =  Mat.ones(imageHelpColor.size(), CvType.CV_8UC1);
-		Imgproc.drawContours(maskZero.submat(r), coutoursRemove, areaRemove, new Scalar(0,0,0,0),-1);
-		Mat tempBlack = new Mat(imageHelpColor.size(), imageHelpColor.type());
-		imageHelpColor.copyTo(tempBlack, maskZero);
-		imageHelpColor = tempBlack.clone();
-	}
 
-
-	/**
+    /**
 	 * 	Return the position of the max area
 	 */
 	public int maxArea(List<MatOfPoint> contoursColor){
@@ -2476,27 +2426,8 @@ public class ColorDetection{
 		}
 		return maxAreaIdxC;
 	}
-	/**
-	 * 	Return the position of the min area
-	 */
-	public int minArea(List<MatOfPoint> contoursColor){
-		Mat contourC = new Mat();
-		contourC = contoursColor.get(0);
-		double minAreaC = Imgproc.contourArea(contourC);
-		int minAreaIdxC = 0;
-		for(int idx = 0; idx < contoursColor.size(); idx++){
-			contourC = contoursColor.get(idx);
-			double contourarea = Imgproc.contourArea(contourC);
 
-			if(contourarea < minAreaC){
-				minAreaC = contourarea;
-				minAreaIdxC = idx;
-			}
-		}
-		return minAreaIdxC;
-	}
-
-	/**
+    /**
 	 * 	Reset imageOfTakeColor
 	 */
 	public void resetColorOftheImage()
@@ -2504,204 +2435,8 @@ public class ColorDetection{
 		imageHelpColor = notBackground.clone();
 	}
 
-	/**
-	 * 	Reset imageOfTakeColor
-	 */
-	public Mat getColorOftheImage()
-	{
-		return imageHelpColor.clone();
-	}
 
-	/**
-	 * Get the countours in the mole by color version 2.0
-	 */
-	public List<MatOfPoint> findContoursColor2(int n)
-	{
-
-		List<MatOfPoint> contoursColor = new ArrayList<MatOfPoint>();
-
-		//Black
-		if(n == 1){
-			contoursColor = getBlackContour();
-		}
-		//Light-Blown
-		else if(n == 2){
-			contoursColor = getLightBrownContour();
-		}
-		//Dark-Blown
-		else if(n == 3){
-			contoursColor = getDarkBrownContour();
-		}
-
-		//Red, take a range between red and purple, image test
-		else if(n == 4){
-			contoursColor = getRedContour();
-		}
-
-		//Gray
-		else if(n == 5){
-			contoursColor = getBlueContour();
-		}
-
-		//White
-		else if(n == 6){
-			contoursColor = getWhiteContour();
-		}
-
-		return contoursColor;
-	}
-
-
-	/**
-	 *
-	 *
-	 */
-	public Scalar getSkinColor(Mat originalMat){
-
-		Scalar skinColor = getColorPoint(5,5);
-		return skinColor;
-	}
-
-
-	public List<MatOfPoint> skinCancel(Scalar hsvColor) {
-
-		Scalar mLowerBound = new Scalar(0);
-		Scalar mUpperBound = new Scalar(0);
-		// Minimum contour area in percent for contours filtering
-		double mMinContourArea = 0.1;
-		// Color radius for range checking in HSV color space
-		Scalar mColorRadius = new Scalar(25,50,50,0);
-		Mat mSpectrum = new Mat();
-		List<MatOfPoint> mContours = new ArrayList<MatOfPoint>();
-
-		// Cache
-		Mat mPyrDownMat = new Mat();
-		Mat mHsvMat = new Mat();
-		Mat mMask = new Mat();
-		Mat mDilatedMask = new Mat();
-		Mat mHierarchy = new Mat();
-
-
-		double minH = (hsvColor.val[0] >= mColorRadius.val[0]) ? hsvColor.val[0]-mColorRadius.val[0] : 0;
-		double maxH = (hsvColor.val[0]+mColorRadius.val[0] <= 255) ? hsvColor.val[0]+mColorRadius.val[0] : 255;
-
-		mLowerBound.val[0] = minH;
-		mUpperBound.val[0] = maxH;
-
-		mLowerBound.val[1] = hsvColor.val[1] - mColorRadius.val[1];
-		mUpperBound.val[1] = hsvColor.val[1] + mColorRadius.val[1];
-
-		mLowerBound.val[2] = hsvColor.val[2] - mColorRadius.val[2];
-		mUpperBound.val[2] = hsvColor.val[2] + mColorRadius.val[2];
-
-		mLowerBound.val[3] = 0;
-		mUpperBound.val[3] = 255;
-
-		Mat spectrumHsv = new Mat(1, (int)(maxH-minH), CvType.CV_8UC3);
-
-		for (int j = 0; j < maxH-minH; j++) {
-			byte[] tmp = {(byte)(minH+j), (byte)255, (byte)255};
-			spectrumHsv.put(0, j, tmp);
-		}
-
-		Imgproc.cvtColor(spectrumHsv, mSpectrum, Imgproc.COLOR_HSV2RGB_FULL, 4);
-		////
-
-
-		Mat rgbaImage = originalImage.clone();
-
-		Imgproc.pyrDown(rgbaImage, mPyrDownMat);
-		Imgproc.pyrDown(mPyrDownMat, mPyrDownMat);
-
-		Imgproc.cvtColor(mPyrDownMat, mHsvMat, Imgproc.COLOR_RGB2HSV_FULL);
-
-		Core.inRange(mHsvMat, mLowerBound, mUpperBound, mMask);
-		Imgproc.dilate(mMask, mDilatedMask, new Mat());
-
-		List<MatOfPoint> contours = new ArrayList<MatOfPoint>();
-
-		Imgproc.findContours(mDilatedMask, contours, mHierarchy, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
-
-
-		//mContours.clear();
-		//mContours = contours;
-
-		// Find max contour area
-		double maxArea = 0;
-		Iterator<MatOfPoint> each = contours.iterator();
-		while (each.hasNext()) {
-			MatOfPoint wrapper = each.next();
-			double area = Imgproc.contourArea(wrapper);
-			if (area > maxArea)
-				maxArea = area;
-		}
-
-		// Filter contours by area and resize to fit the original image size
-		mContours.clear();
-		each = contours.iterator();
-		while (each.hasNext()) {
-			MatOfPoint contour = each.next();
-			//if (Imgproc.contourArea(contour) > mMinContourArea*maxArea) {
-			Core.multiply(contour, new Scalar(4,4), contour);
-			mContours.add(contour);
-			//}
-		}
-
-		return mContours;
-
-	}
-
-
-
-	/**
-	 */
-	public List<MatOfPoint> findContoursColorInput(Scalar Color)
-	{
-		Mat originalMat = originalImage.clone();
-		Mat mask = Mat.zeros(originalMat.size(), CvType.CV_8UC1);
-
-		// Cache
-		Mat mPyrDownMat = new Mat();
-		Mat mHsvMat = new Mat();
-		//Mat mMask = Mat.zeros(originalMat.size(), CvType.CV_8UC1);
-		Mat mMask = Mat.zeros(originalMat.size(), CvType.CV_8UC1);
-		Mat mDilatedMask = new Mat();
-		Mat mHierarchy = new Mat();
-		List<MatOfPoint> contoursColor = new ArrayList<MatOfPoint>();
-
-
-		// convert input-image to HSV-image
-		Imgproc.cvtColor(originalMat, mHsvMat, Imgproc.COLOR_RGB2HSV_FULL);
-
-		Core.inRange(mHsvMat, new Scalar(0, 0, 0, 0), new Scalar(360, 255, 50, 255), mMask);// table 1
-		Imgproc.findContours(mMask, contoursColor, mHierarchy, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
-		Log.i("INTERNAL", "contoursColor" + contoursColor.size());
-
-		mMask = Mat.zeros(originalMat.size(), CvType.CV_8UC1);
-		Imgproc.drawContours(mMask, contoursColor, -1, new Scalar(255,255,255,255) ,-1);
-		Imgproc.findContours(mMask, contoursColor, mHierarchy, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
-				    /*
-			        Scalar initRange = new Scalar(Color.val[2] - 10, Color.val[1] - 60,Color.val[0] - 60, 0);
-			        Scalar endRange = new Scalar(Color.val[2] + 10, Color.val[1] + 60,Color.val[0] + 60, 255);
-
-				    Core.inRange(mHsvMat, initRange, endRange, mMask);// table 1
-			       	Imgproc.findContours(mMask, contoursColor, mHierarchy, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
-				    */
-
-
-
-		mask.release();
-		mPyrDownMat.release();
-		mHsvMat.release();
-		//Mat mMask = Mat.zeros(originalMat.size(), CvType.CV_8UC1);
-		mMask.release();
-		mDilatedMask.release();
-		mHierarchy.release();
-		originalMat.release();
-		return contoursColor;
-
-	}
-	/**
+    /**
 	 *
 	 *
 	 */
@@ -2713,119 +2448,92 @@ public class ColorDetection{
 
 	}
 
-	/**
-	 */
-	public Scalar colorSquare(int n)
-	{
 
-		//Black
-		if(n == 1){
-			return convertColorToScalar(Color.BLACK);
-		}
-		//Blown
-		if(n == 2){
-			return convertColorToScalar(Color.rgb(102, 51, 0));
-		}
+    public List<MatOfPoint> getColorContour(Mat img, Scalar low_color, Scalar high_color,
+                                            String color){
+        Mat mHsvMat = new Mat();
+        Mat mMask = Mat.zeros(img.size(), CvType.CV_8UC1);
+        Mat mHierarchy = new Mat();
+        List<MatOfPoint> contours = new ArrayList<MatOfPoint>();
 
-		//Red, take a range between red and purple, image test
-		if(n == 3){
-			return convertColorToScalar(Color.rgb(255, 153, 153));
-		}
+        double cntArea = 0;
+//        double maxAreaColor = getContoursArea(cnt);
+//        double maxAreaColor = getContoursArea(cnt);
+//        double specContourArea = 0;
+//        double percArea;
+//        int rangePerc = 5;
 
-		//Gray
-		if(n == 4){
-			return convertColorToScalar(Color.GRAY);
-		}
+        Imgproc.cvtColor(img, mHsvMat, Imgproc.COLOR_BGR2HSV);
+        //Range of the color
+        List<MatOfPoint> contours2 = new ArrayList<MatOfPoint>();
+        Core.inRange(mHsvMat, low_color, high_color, mMask);//table 2
+        Imgproc.findContours(mMask, contours, mHierarchy, Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_NONE);
+//        Double[] areas = new Double[contours.size()];
+        for(int i=0; i< contours.size(); i++){
+            Mat contour = contours.get(i);
+            cntArea = Imgproc.contourArea(contour);
+            if(cntArea > contourArea * 0.02 && !color.equals("Black")){
+                contours2.add(contours.get(i));
+//                Log.i("INTERNAL", color + " Area" + cntArea);
+            }
+            if(cntArea > contourArea * 0.02 && color.equals("Black") && cntArea < contourArea){
+                contours2.add(contours.get(i));
+//                Log.i("INTERNAL", color + " Area" + cntArea);
+            }
+        }
 
-		//White
-		if(n == 5){
-			return convertColorToScalar(Color.WHITE);
-		}
+        mHsvMat.release();
+        mMask.release();
+        mHierarchy.release();
+        Log.i("INTERNAL", color + " contours" + contours2.size());
 
-		return convertColorToScalar(Color.TRANSPARENT);
-	}
-	/***8
-	 * Eggs functions
-	 *
-	 */
+        return contours2;
+    }
 
-	/**
-	 * Set image to contours eggs
-	 */
-	public void setImageEggs(Mat mRgba){
-		imageEggs = mRgba.clone();
-	}
-	/**
-	 * Get the countours of white color in the mole
-	 * @param
-	 * 	coutoursRemove ->  the contours that want to remove the biggest area of the image help
-	 */
-	private void removeBackEggs(List<MatOfPoint> coutoursRemove)
-	{
-		Rect r = getRect();
-		Mat maskZero =  Mat.ones(imageHelpColor.size(), CvType.CV_8UC1);
-		int maxArea = maxArea(coutoursRemove);
-		Imgproc.drawContours(maskZero.submat(r), coutoursRemove, maxArea, new Scalar(0,0,0,0),-1);
-		Mat tempBlack = new Mat(imageHelpColor.size(), imageHelpColor.type());
-		imageHelpColor.copyTo(tempBlack, maskZero);
-		imageHelpColor = tempBlack.clone();
-		//Imgproc.drawContours(imageHelpColor.submat(r), coutoursRemove, maxArea, new Scalar(0,0,204,255),1);
-	}
+    public void setContourArea(double maxAreaC){
+        this.contourArea = maxAreaC;
+    }
 
-	/**
-	 * Get the countours of eggs in the mole
-	 */
-	public List<MatOfPoint> getEggsContour(Mat imageProcess)
-	{
-		//Mat originalMat= notBackground.clone();
-		Mat mHsvMat = new Mat();
-		Mat mMask = Mat.zeros(imageProcess.size(), CvType.CV_8UC1);
-		Mat mHierarchy = new Mat();
-		List<MatOfPoint> contoursColor = new ArrayList<MatOfPoint>();
+    public void setValueThreshold(double value_threshold){
+        this.value_threshold = value_threshold;
+    }
 
-		Imgproc.cvtColor(imageProcess, mHsvMat, Imgproc.COLOR_RGB2HSV_FULL);  // convert input-image to HSV-image
-					    /*
-					    Core.inRange(mHsvMat, new Scalar(0, 0, 0, 0), new Scalar(360, 255, 50, 255), mMask);// table 1
-					    Imgproc.findContours(mMask, contoursColor, mHierarchy, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
-					    */
+    public void getAllColorContours(Mat mask_img, Mat img){
+        Map<String, ArrayList<Scalar>> map = new HashMap<String, ArrayList<Scalar>>();
+        Scalar color = new Scalar(15,0,0);
+        map.put("Blue Gray",new ArrayList<Scalar>(){{
+            add(new Scalar(15,0,0));
+            add(new Scalar(179,255,value_threshold));
+            add(new Scalar(0,153,0));
+        }});
+        map.put("White",new ArrayList<Scalar>(){{
+            add(new Scalar(0,0,145));
+            add(new Scalar(15,80,value_threshold));
+            add(new Scalar(255,255,0));
+        }});
+        map.put("Light Brown",new ArrayList<Scalar>(){{
+            add(new Scalar(0,80,value_threshold+3));
+            add(new Scalar(15,255,255));
+            add(new Scalar(0,255,255));
+        }});
+        map.put("Dark Brown",new ArrayList<Scalar>(){{
+            add(new Scalar(0,80,0));
+            add(new Scalar(15,255,value_threshold-3));
+            add(new Scalar(0,0,204));
+        }});
+        map.put("Black",new ArrayList<Scalar>(){{
+            add(new Scalar(0,0,0));
+            add(new Scalar(15,140,90));
+            add(new Scalar(0,0,0));
+        }});
 
-		Core.inRange(mHsvMat, new Scalar(0, 100, 100, 0), new Scalar(360, 210, 150, 255), mMask);
-		Imgproc.findContours(mMask, contoursColor, mHierarchy, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
+        Log.i("INTERNAL", "Contour Area" + contourArea);
+        for (String key : map.keySet()){
+            ArrayList<Scalar> colors = map.get(key);
+            List<MatOfPoint> colorContours;
+            colorContours = getColorContour(mask_img,colors.get(0), colors.get(1), key);
+            Imgproc.drawContours(img, colorContours , -1, colors.get(2),thickness);
+         }
+    }
 
-
-		mMask = Mat.zeros(imageProcess.size(), CvType.CV_8UC1);
-		Imgproc.drawContours(mMask, contoursColor, -1, new Scalar(255,255,255,255) ,-1);
-		Imgproc.findContours(mMask, contoursColor, mHierarchy, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
-
-
-		mHsvMat.release();
-		mMask.release();
-		mHierarchy.release();
-		imageProcess.release();
-
-		return contoursColor;
-	}
-
-	public static double confrontoMatchShapes(Mat qMat, Mat lMat){
-		//query
-		Mat qTemp = new Mat(qMat.size(), CvType.CV_32FC2);
-		Mat qMatG = new Mat(qMat.size(), CvType.CV_32FC2);
-		Imgproc.cvtColor(qMat, qTemp, Imgproc.COLOR_BGRA2GRAY);
-		Mat qTemp2 = new Mat(qMat.size(), CvType.CV_32FC2);
-		qTemp.assignTo(qTemp2, CvType.CV_32FC2);
-		qMatG = qTemp2.reshape(1);
-
-
-		//logo
-		Mat lTemp = new Mat(lMat.size(), CvType.CV_32FC2);
-		Mat lMatG = new Mat(lMat.size(), CvType.CV_32FC2);
-		Imgproc.cvtColor(lMat, lTemp, Imgproc.COLOR_BGRA2GRAY);
-		Mat lTemp2 = new Mat(lMat.size(), CvType.CV_32FC2);
-		lTemp.assignTo(lTemp2, CvType.CV_32FC2);
-		lMatG = lTemp2.reshape(1);
-		Log.d("HelloImageDetection", "qMat size:"+qMat.size()+ "lMat size:"+lMat.size() );
-		Log.d("HelloImageDetection", "q.checkV(2)="+qMatG.checkVector(2)+", l.checkV(2)="+lMatG.checkVector(2)+", q.depth="+CvType.typeToString(qMatG.depth())+", l.depth="+CvType.typeToString(lMatG.depth())+", numChQ="+qMatG.channels()+", numChL="+lMatG.channels());
-
-		return Imgproc.matchShapes(qMatG, lMatG, Imgproc.CV_CONTOURS_MATCH_I1, 1);
-	}
 }

@@ -18,9 +18,8 @@ import android.widget.Toast;
 public class MainActivity extends Activity {
 	private static final String mDirName = "MoleDetection";
 	private static final String TAG = "MoleDetection::MainActivity";
-	private Button BeginBtn;
 
-    @SuppressLint("LongLogTag")
+	@SuppressLint("LongLogTag")
 	@Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -38,9 +37,9 @@ public class MainActivity extends Activity {
 			else
 				Log.i(TAG, "Directory " + mDirName + " Created");
 		}
-        
-        BeginBtn = (Button) findViewById(R.id.angry_btn);
-        BeginBtn.setOnClickListener(new OnClickListener() {
+
+		Button beginBtn = (Button) findViewById(R.id.angry_btn);
+        beginBtn.setOnClickListener(new OnClickListener() {
 
 			@Override
 			public void onClick(View v) {
