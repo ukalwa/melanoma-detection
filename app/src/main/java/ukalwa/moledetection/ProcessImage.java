@@ -1,3 +1,17 @@
+/**
+ *
+ *  @Class: Class ProcessImage
+ *   	Handles extraction of features and classifying the lesion
+ *
+ * 	@Version: 2.0
+ * 	@Author: Upender Kalwa
+ * 	@Created: 04/16/15
+ * 	@Modified_by Upender Kalwa
+ * 	@Modified: 05/16/17
+ *
+ */
+
+
 package ukalwa.moledetection;
 
 
@@ -34,7 +48,6 @@ import org.opencv.core.RotatedRect;
 import org.opencv.core.Scalar;
 import org.opencv.highgui.Highgui;
 import org.opencv.imgproc.Imgproc;
-import org.opencv.imgproc.Moments;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -312,7 +325,7 @@ public class ProcessImage extends Activity {
                 }
             }
 
-            Rect r = Imgproc.boundingRect(contours.get(maxAreaIdx));
+//            Rect r = Imgproc.boundingRect(contours.get(maxAreaIdx));
             point2F = new MatOfPoint2f(contours.get(maxAreaIdx).toArray());
             ellipse = Imgproc.fitEllipse(point2F);                                    //Ellipse Fitting function
             //Imgproc.warpAffine(originalMat, tempMat, rot_mat, originalMat.size());
@@ -321,12 +334,9 @@ public class ProcessImage extends Activity {
             ///////// Init //// Color detection /////////////////////
             MatOfPoint contour = contours.get(maxAreaIdx);
             int nColors;
-            Mat matrixAbove = Mat.zeros(originalMat.size(), CvType.CV_8UC3);
-            Mat tempMat2 = Mat.zeros(originalMat.size(), CvType.CV_8UC3);
-            Log.i(TAG, "Image View height : " + imageViewAbove.getHeight() + " Image View Width : " + imageViewAbove.getWidth());
-            Log.i(TAG, "Mat Above" + matrixAbove.size() + " Help Matrix: " + tempMat2.size());
-            Core.bitwise_not(tempMat2, matrixAbove);
-            tempMat2.release();
+            Mat matrixAbove = Mat.ones(originalMat.size(), CvType.CV_8UC4);
+//            Log.i(TAG, "Image View height : " + imageViewAbove.getHeight() + " Image View Width : " + imageViewAbove.getWidth());
+            Log.i(TAG, "Mat Above" + matrixAbove.size());
 //            Mat helpMatrix = matrixAbove.clone();
 
             //remove back ground of the mole
@@ -335,71 +345,69 @@ public class ProcessImage extends Activity {
             Mat tempBlack = new Mat(tempMat.size(), tempMat.type());
             tempMat.copyTo(tempBlack, maskZero);
 
-            ColorDetection colorProcess = new ColorDetection(originalMat.clone());
-
-            Moments p = Imgproc.moments(contours.get(maxAreaIdx));
-            int xCenter = (int) (p.get_m10() / p.get_m00());
-            int yCenter = (int) (p.get_m01() / p.get_m00());
-            colorProcess.insertMiddlePoint(xCenter, yCenter);
-            colorProcess.setMoleWithoutBackground(tempBlack);
-            colorProcess.setContourMole(contours.get(maxAreaIdx));
-            colorProcess.setRect(r);
-            colorProcess.setMatrixAbove(matrixAbove);
+//            Moments p = Imgproc.moments(contours.get(maxAreaIdx));
+//            int xCenter = (int) (p.get_m10() / p.get_m00());
+//            int yCenter = (int) (p.get_m01() / p.get_m00());
 
             // My additions
-            colorProcess.setContourArea(maxArea);
-            double tolerance = 30;
-            double value_threshold = Core.mean(hsvMat).val[2] - tolerance;
-            Log.i(TAG, "Mean" + String.valueOf(value_threshold));
-            colorProcess.setValueThreshold(value_threshold);
+            ColorDetection colorProcess = new ColorDetection();
             Mat maskImg = new Mat(img.size(), img.type());
             Mat colorImg = img.clone();
+            Mat colorImgRGBA = new Mat();
             img.copyTo(maskImg, maskZero);
-            colorProcess.setImg(maskImg);
-            colorProcess.getAllColorContours(maskImg, colorImg);
-            Highgui.imwrite(fileWithoutExtension +"_colors_new.PNG", colorImg);
+            double tolerance = 30;
+            double value_threshold = Core.mean(hsvMat).val[2] - tolerance;
 
-            colorProcess.colorProcessImage();
-            Mat colorMat = colorProcess.getColorProcessImage();
-            //originalMat = colorProcess.getColorOftheImage();
-            matrixAbove = colorProcess.getMatrixAbove();
+            colorProcess.setContourArea(maxArea);
+            colorProcess.setLabelMatrix(matrixAbove);
+            colorProcess.setValueThreshold(value_threshold);
+            colorProcess.getAllColorContours(maskImg, colorImg);
+//            Imgproc.cvtColor(colorProcess.getLabelMatrix(), matrixAbove,Imgproc.COLOR_BGR2RGBA );
+            matrixAbove = colorProcess.getLabelMatrix();
+
+            Log.i(TAG, "Mean" + String.valueOf(value_threshold));
+
+            Highgui.imwrite(fileWithoutExtension +"_colors_new.PNG", colorImg);
+            Imgproc.cvtColor(colorImg, colorImgRGBA,Imgproc.COLOR_BGR2RGBA );
+
+
             nColors = colorProcess.getNumberOfColors();
-            Imgproc.drawContours(colorMat, contours, maxAreaIdx, new Scalar(255, 255, 255, 255), 2);
+//            Imgproc.drawContours(colorMat, contours, maxAreaIdx, new Scalar(255, 255, 255, 255), 2);
 
 
             //textViewColor.setText("No of Colors: "+nColors);
 
             //////////// Init ///// Abrupt Edge ////////////////////////
 
-            //originalMat = colorProcess.getOriginalImage();
-            List<MatOfPoint> cAbruptEdgeColor = colorProcess.returnCountoursAbruptColor();
-            //Imgproc.drawContours(originalMat, cAbruptEdgeColor, colorProcess.maxArea(cAbruptEdgeColor), new Scalar(255,255,0,255), 1); //yellow
-
-            List<MatOfPoint> border;
-            double areaContourPart, areaColorPart;
-            double taThreshold = 0.1;
-            int abruptEdges = 0;
-            for (int i = 1; i < 9; i++) {
-//                border = new ArrayList<>();
-                border = colorProcess.getContoursPartMole(contours, i);
-                //Imgproc.drawContours(originalMat, border, colorProcess.maxArea(border), new Scalar(0,153,0,255), 1); // green
-                areaContourPart = colorProcess.getContoursArea(border);
-
-//                border = new ArrayList<MatOfPoint>();
-                border = colorProcess.getContoursPartMole(cAbruptEdgeColor, i);
-                //Imgproc.drawContours(originalMat, border, colorProcess.maxArea(border), new Scalar(0,0,204,255), 1); //dark blue
-                areaColorPart = colorProcess.getContoursArea(border);
-
-                if (1 - areaContourPart / areaColorPart <= taThreshold) {
-                    abruptEdges++;
-                }
-            }
+//            //originalMat = colorProcess.getOriginalImage();
+//            List<MatOfPoint> cAbruptEdgeColor = colorProcess.returnCountoursAbruptColor();
+//            //Imgproc.drawContours(originalMat, cAbruptEdgeColor, colorProcess.maxArea(cAbruptEdgeColor), new Scalar(255,255,0,255), 1); //yellow
+//
+//            List<MatOfPoint> border;
+//            double areaContourPart, areaColorPart;
+//            double taThreshold = 0.1;
+//            int abruptEdges = 0;
+//            for (int i = 1; i < 9; i++) {
+////                border = new ArrayList<>();
+//                border = colorProcess.getContoursPartMole(contours, i);
+//                //Imgproc.drawContours(originalMat, border, colorProcess.maxArea(border), new Scalar(0,153,0,255), 1); // green
+//                areaContourPart = colorProcess.getContoursArea(border);
+//
+////                border = new ArrayList<MatOfPoint>();
+//                border = colorProcess.getContoursPartMole(cAbruptEdgeColor, i);
+//                //Imgproc.drawContours(originalMat, border, colorProcess.maxArea(border), new Scalar(0,0,204,255), 1); //dark blue
+//                areaColorPart = colorProcess.getContoursArea(border);
+//
+//                if (1 - areaContourPart / areaColorPart <= taThreshold) {
+//                    abruptEdges++;
+//                }
+//            }
             //textViewColor.setText("Abrupt Ed: "+abruptEdges);
             //Imgproc.drawContours(originalMat, contours, maxAreaIdx, new Scalar(255,255,255,255), 1);
             //contour.release();
 
             //////////////// End ///////////// Abrupt Edge ////////////////
-            textViewColor.setText("NColor: " + nColors + " AEdge: " + abruptEdges);
+            textViewColor.setText("Colors: " + nColors);
 
             //contourLength = contours.size();
 
@@ -604,8 +612,8 @@ public class ProcessImage extends Activity {
                 matrixAbove.copyTo(matrixAbove);
             Utils.matToBitmap(matrixAbove, aboveBmp);
             imageViewAbove.setImageBitmap(aboveBmp);
-            Bitmap imagebmp5 = Bitmap.createBitmap(colorMat.cols(), colorMat.rows(), Bitmap.Config.ARGB_8888);
-            Utils.matToBitmap(colorMat, imagebmp5);
+            Bitmap imagebmp5 = Bitmap.createBitmap(colorImgRGBA.cols(), colorImgRGBA.rows(), Bitmap.Config.ARGB_8888);
+            Utils.matToBitmap(colorImgRGBA, imagebmp5);
             imageView5.setImageBitmap(imagebmp5);
             //textViewColor.setText("Horizontal Asymmetry");
 
@@ -614,8 +622,8 @@ public class ProcessImage extends Activity {
          * Publishing results in result view
          */
             //***************
-            Bitmap resultimgbmp = Bitmap.createBitmap(colorMat.cols(), colorMat.rows(), Bitmap.Config.ARGB_8888);
-            Utils.matToBitmap(colorMat, resultimgbmp);
+            Bitmap resultimgbmp = Bitmap.createBitmap(colorImgRGBA.cols(), colorImgRGBA.rows(), Bitmap.Config.ARGB_8888);
+            Utils.matToBitmap(colorImgRGBA, resultimgbmp);
             resultImage.setImageBitmap(resultimgbmp);
 
 

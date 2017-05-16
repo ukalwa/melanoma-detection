@@ -90,7 +90,8 @@
         <RelativeLayout android:id="@+id/layout5"
             android:layout_width="fill_parent"
             android:layout_height="fill_parent"
-            tools:ignore="UselessParent,ExtraText" >
+            tools:ignore="UselessParent,ExtraText"
+            android:padding="10dp">
 
             <ImageView
                 android:id="@+id/color_image1"
@@ -103,7 +104,7 @@
             <ImageView
                 android:id="@+id/color_image2"
                 android:layout_width="fill_parent"
-                android:layout_height="100dp"
+                android:layout_height="200dp"
                 android:contentDescription="Image"
                 android:layout_below="@+id/textViewColor"
                 tools:ignore="HardcodedText" />
