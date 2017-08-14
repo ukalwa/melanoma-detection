@@ -89,6 +89,7 @@ ActiveContour::ActiveContour(int img_width1, int img_height1, bool hasEllipse1, 
             {
                 phi[i] = -1; // inside
                 Lin.push_front(i);
+				
             }
             else
             {

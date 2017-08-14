@@ -18,7 +18,6 @@
                 android:id="@+id/image1"
                 android:layout_width="fill_parent"
                 android:layout_height="fill_parent"
-                android:layout_alignParentBottom="true"
                 android:layout_below="@+id/ImageTitleText1"
                 android:contentDescription="Image"
                 tools:ignore="HardcodedText" />
@@ -27,6 +26,7 @@
                 style="@style/ImageTitle"
                 android:id="@+id/ImageTitleText1"
                 tools:ignore="HardcodedText"/>
+
 
         </RelativeLayout>
         <RelativeLayout
@@ -135,25 +135,34 @@
             <ImageView
                 android:id="@+id/result_image"
                 android:layout_width="fill_parent"
-                android:layout_height="240dp"
+                android:layout_height="fill_parent"
                 android:layout_marginTop="20dp"
                 android:contentDescription="Image"
                 android:layout_below="@+id/ResultTitle"
+                android:layout_above="@+id/resultView"
                 tools:ignore="HardcodedText"/>
 
             <TextView
-                android:id="@+id/resultView"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="20dp"
-                android:layout_marginLeft="20dp"
                 android:layout_alignParentBottom="true"
-                android:layout_below="@+id/result_image"
-                android:textAlignment="center"
-                tools:ignore="HardcodedText"
-                android:textSize="15sp"/>
-        </RelativeLayout>
+                android:id="@+id/resultView"
+                android:layout_alignParentEnd="true"
+                android:textSize="18sp"
+                android:textStyle="normal|bold"
+                android:gravity="center"
+                android:textAlignment="center"/>
+                <!--android:layout_width="wrap_content"-->
+                <!--android:layout_height="50dp"-->
+                <!--android:layout_marginTop="20dp"-->
+                <!--android:layout_marginLeft="20dp"-->
+                <!--android:layout_alignParentBottom="true"-->
+                <!--android:layout_below="@+id/result_image"-->
+                <!--android:gravity="center"-->
+                <!--android:textAlignment="center"-->
+                <!--tools:ignore="HardcodedText"-->
 
+        </RelativeLayout>
     </ViewFlipper>
 
     <Button
