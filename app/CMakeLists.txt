@@ -1,15 +1,15 @@
 # Sets the minimum version of CMake required to build the native
 # library. You should either keep the default value or only pass a
 # value of 3.4.0 or lower.
-set(pathToApp C:/Users/ukalwa/workspace/moledetection_v2.0/app)
-set(pathToOpenCv C:/Users/ukalwa/Downloads/OpenCV-2.4.10-android-sdk)
+# set(pathToApp C:/Users/ukalwa/workspace/moledetection_v2.0/app)
+set(pathToOpenCv ${OPENCV_SDK})
 set(cppLoc src/main/cpp)
 set(CMAKE_VERBOSE_MAKEFILE on)
 
 cmake_minimum_required(VERSION 3.4.1)
 include_directories(${pathToOpenCv}/sdk/native/jni/include)
 add_library( lib_opencv SHARED IMPORTED )
-set_target_properties(lib_opencv PROPERTIES IMPORTED_LOCATION ${pathToApp}/src/main/jniLibs/${ANDROID_ABI}/libopencv_java.so)
+set_target_properties(lib_opencv PROPERTIES IMPORTED_LOCATION ./src/main/jniLibs/${ANDROID_ABI}/libopencv_java.so)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++11")
 
 
