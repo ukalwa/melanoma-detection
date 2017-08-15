@@ -19,7 +19,8 @@ android {
                 cppFlags "-frtti -fexceptions"
                 abiFilters 'armeabi-v7a','x86'
                 arguments '-DANDROID_PLATFORM=android-17',
-                        '-DANDROID_TOOLCHAIN=clang', '-DANDROID_STL=gnustl_static'
+                        '-DANDROID_TOOLCHAIN=clang', '-DANDROID_STL=gnustl_static',
+                        '-DPROJECT_ROOT='+projectDir, '-DOPENCV_SDK='+System.getenv('OPENCV_SDK')
             }
         }
     }
