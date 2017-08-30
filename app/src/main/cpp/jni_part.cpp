@@ -82,14 +82,15 @@ void create_mask(Mat contour_image, Mat zero_img) {
     // Create a temporary clone of the contour image as the function findContours is known
     // to modify the pixels in the image passed as parameter
     Mat temp_img = contour_image.clone();
+    contours.clear();
     findContours(temp_img, contours, hierarchy, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE);
 
     // Loop through the contours to find the largest contour in the image by measuring
     // area of each contour and store the array position in max_area_pos
     cnt = contours.size();
     if (cnt > 0) {
-        for (int j = 0; j < cnt; j++) {
-            area = contourArea(contours[j]);
+        for (unsigned j = 0; j < cnt; j++) {
+            area = contourArea(contours.at(j));
             if (area > max_area) {
                 max_area = area;
                 max_area_pos = j;
@@ -114,16 +115,17 @@ void find_contour_breaks() {
         std::cout << "break points : ";
         // Loop through all the break points in the image (only occurs at the edges of the image)
         // We assume breaks happen in pairs (connecting them forms a complete contour)
-        for (int j = 0; j < cnt; j++) {
-            if (contours[j].size() <= 1) // Might be a mistake
+        for (unsigned j = 0; j < cnt; j++) {
+            if (contours.at(j).size() <= 1) // Might be a mistake
                 continue;
-            for (int k = 0; k < contours[j].size(); k++) {
+            for (int k = 0; k < contours.at(j).size(); k++) {
                 // Load three consecutive points separated by spacing
                 pt2 = contours[j][k];
-                pt1 = k - spacing < 0 ? contours[j][contours[j].size() + k - spacing] :
+                pt1 = k - spacing < 0 ? contours[j][contours.at(j).size() + k - spacing] :
                       contours[j][k - spacing];
-                pt3 = k + spacing >= contours[j].size() ? contours[j][k + spacing -
-                        contours[j].size()] : contours[j][k + spacing];
+                pt3 = k + spacing >= contours.at(j).size() ? contours[j][k + spacing -
+                                                                         contours.at(j).size()]
+                                                           : contours[j][k + spacing];
                 // We determine u-turn based on cosine rule
                 // cos(theta) = ((pt1-pt2).(pt3-pt2)) / (|pt1-pt2||pt3-pt2|)
                 // Calculate differences from center point pt2
@@ -196,11 +198,11 @@ void stitch_contour_breaks(Mat contour_image) {
     *********************************************************************************************/
     Point pt, pt1, pt2; // Loop variables
     Point pt3 = Point(0,0); // Initialize pt3 incase breaks happen on different axes
-    int temp_idx;
+    unsigned temp_idx;
     // Paired point indexes are stored to avoid each point from forming additional pairs
     vector<int> idx_array;
     bool flag_x;
-    int min_dist_pos=0;
+    unsigned min_dist_pos = 0;
     double min_dist, dist;
     // handling if there is only break in the image i.e., two break points
     if (break_points.size() == 2) {
@@ -217,7 +219,7 @@ void stitch_contour_breaks(Mat contour_image) {
         }
     }
     else { // handle multiple break points in the image
-        for (int i = 0; i < break_points.size(); i++) {
+        for (unsigned i = 0; i < break_points.size(); i++) {
             flag_x = false;
             pt = break_points[i];
             min_dist = 9999;
@@ -232,7 +234,7 @@ void stitch_contour_breaks(Mat contour_image) {
             //std::cout << std::endl;
             if (flag_x) // skip the point if it is paired
                 continue;
-            for (int j = i + 1; j < break_points.size(); j++) {
+            for (unsigned j = i + 1; j < break_points.size(); j++) {
                 bool flag_y = false;
                 // Skip the point if it is already paired with another point
                 for (int k = 0; k < idx_array.size(); k++) {
@@ -244,7 +246,8 @@ void stitch_contour_breaks(Mat contour_image) {
                 if (flag_y) // skip the point if it is paired
                     continue;
                 // calculate distances from the current point to all other points
-                dist = sqrt(pow(pt.x - break_points[j].x, 2) + pow(pt.y - break_points[j].y, 2));
+                dist = sqrt(
+                        pow(pt.x - break_points.at(j).x, 2) + pow(pt.y - break_points.at(j).y, 2));
                 // calculate the minimum distance from all other points
                 // and store its index in min_dist_pos
                 if (dist < min_dist) {
@@ -255,21 +258,20 @@ void stitch_contour_breaks(Mat contour_image) {
             temp_idx = min_dist_pos;
             idx_array.push_back(i);
             idx_array.push_back(temp_idx);
-            std::cout << "pairs formed : " << pt << break_points[temp_idx] << std::endl;
+            std::cout << "pairs formed : " << pt << break_points.at(temp_idx) << std::endl;
             // Detect pairs on different axes
-            if (detect_break_diff_axes(pt, break_points[temp_idx], pt3)) {
+            if (detect_break_diff_axes(pt, break_points.at(temp_idx), pt3)) {
                 line(contour_image, pt, pt3, Scalar(255), 1);
-                line(contour_image, pt3, break_points[temp_idx], Scalar(255), 1);
+                line(contour_image, pt3, break_points.at(temp_idx), Scalar(255), 1);
             }
             else { // if both the points are on same axes, draw a line between them
-                line(contour_image, pt, break_points[temp_idx], Scalar(255), 1);
+                line(contour_image, pt, break_points.at(temp_idx), Scalar(255), 1);
             }
 
         }
     }
 
 }
-
 
 extern "C" {
 	JNIEXPORT void JNICALL Java_ukalwa_moledetection_ProcessImage_ActiveContour(JNIEnv * env,
@@ -284,8 +286,6 @@ extern "C" {
                                                                                 jintArray energy_list,
                                                                                 jdoubleArray gaussian_list)
 	{
-        // Emtpy contents in the arrays
-        break_points = {};
 
         // Initialize the Mat objects received from JNI Native call
 		Mat& image  = *(Mat*)img; // Convert jlong image sent from java
@@ -296,9 +296,9 @@ extern "C" {
         jdouble *gaussianArray = env->GetDoubleArrayElements(gaussian_list, NULL);
 
         // Create zero images to draw contour and mask
-        Mat mGr = Mat(image.size(),CV_8UC1);
+        Mat mGr = Mat(image.size(), CV_8UC1);
         mGr = Scalar(0);
-        Mat mask_image = *(Mat*)mask_img;
+        Mat mask_image = *(Mat *) mask_img;
         int non_zero_before = 0, non_zero_after = 0; // Used to find breaks in contour
 
         // store cols and rows of the image
@@ -310,18 +310,19 @@ extern "C" {
         init_width = init_width_java;
 
         // retrieve lists sent from python and load it into c++ arrays
-        for (int i=0;i<sizeof(gaussian_params)/sizeof(gaussian_params[0]);i++){
+        for (int i = 0; i < sizeof(gaussian_params) / sizeof(gaussian_params[0]); i++) {
             gaussian_params[i] = gaussianArray[i];
         }
-        std::cout << "Gaussian passed : " << gaussian_params[0] << "," << gaussian_params[1] << std::endl;
+        std::cout << "Gaussian passed : " << gaussian_params[0] << "," << gaussian_params[1] <<
+        std::endl;
 
-        for (int i=0;i<sizeof(iter)/sizeof(iter[0]);i++){
+        for (int i = 0; i < sizeof(iter) / sizeof(iter[0]); i++) {
             iter[i] = iterArray[i];
         }
         std::cout << "Iterations passed : " << iter[0] << "," << iter[1] << std::endl;
 
         std::cout << "Energy params passed : ";
-        for (int i=0;i<sizeof(energy_params)/sizeof(energy_params[0]);i++){
+        for (int i = 0; i < sizeof(energy_params) / sizeof(energy_params[0]); i++) {
             energy_params[i] = energyArray[i];
             std::cout << energy_params[i] << ",";
         }
@@ -340,10 +341,12 @@ extern "C" {
         std::cout << "Non Zero Pixels count after : " << non_zero_after << std::endl;
 
         // We assume a filled mask has atleast 10 times more number of non zero pixels
-        if (non_zero_after > 10 * non_zero_before){
+        if (non_zero_after > 10 * non_zero_before) {
             std::cout << "No breaks in image" << std::endl;
         }
         else {
+            // Emtpy contents in the arrays
+            break_points.clear();
             // If there are breaks in contour, drawContours doesn't fill the contour
             // hence the non zero pixel count would be around the same
             std::cout << "breaks found in image" << std::endl;
@@ -355,6 +358,25 @@ extern "C" {
             create_mask(mGr, mask_image);
             non_zero_after = countNonZero(mask_image);
             std::cout << "Non Zero Pixels count after : " << non_zero_after << std::endl;
+
+            for (int j = 0; j <= 1; j++) {
+                if (non_zero_after > 10 * non_zero_before) {
+                    break;
+                }
+                else {
+                    break_points.clear();
+                    // If there are breaks in contour, drawContours doesn't fill the contour
+                    // hence the non zero pixel count would be around the same
+                    std::cout << "breaks found again in image" << std::endl;
+                    find_contour_breaks(); // find end points of open contours
+                    stitch_contour_breaks(mGr); // join the break points to form closed contour
+
+                    // find largest contour and draw mask
+                    mask_image = Scalar(0);
+                    create_mask(mGr, mask_image);
+                    non_zero_after = countNonZero(mask_image);
+                }
+            }
         }
-	}
+    }
 }

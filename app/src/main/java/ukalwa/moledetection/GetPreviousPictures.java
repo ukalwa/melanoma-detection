@@ -67,30 +67,30 @@ public class GetPreviousPictures extends Activity {
                 proceed_button.setVisibility(View.VISIBLE);
                // Toast.makeText(GetPreviousPictures.this, "" + position,
                 //        Toast.LENGTH_SHORT).show();
-                
-                System.out.println("Inside Onclick...............+position");
+
+//                System.out.println("Inside Onclick...............+position");
 
                 //setContentView(R.layout.full_image);
                 
                 addListenerOnButton2();
                 addListenerOnButtonProceed();
 
-                System.out.println("inside the full image?????????????????????????????????");
+//                System.out.println("inside the full image?????????????????????????????????");
 
 
                  //Intent i = new Intent(GetPreviousPictures.this, imageViewFlipper.class);
                 // passing array index
                 // i.putExtra("id", position);
                 //  startActivity(i);
-                System.out
-                        .println("Inside the intent////////////////////////////////////");
+//                System.out
+//                        .println("Inside the intent////////////////////////////////////");
                 filePath = files[position].getPath();
                 bm = BitmapFactory.decodeFile(filePath);
                 imageView.setImageBitmap(bm);
-                
-                
-                System.out
-                        .println("Inside ihe image view///////////////////????????????????????????");
+
+
+//                System.out
+//                        .println("Inside ihe image view///////////////////????????????????????????");
             }
         });
         //registerForContextMenu(g);

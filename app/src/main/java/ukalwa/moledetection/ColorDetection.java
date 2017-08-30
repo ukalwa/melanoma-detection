@@ -156,10 +156,11 @@ class ColorDetection{
             featureSet.add(dist);
 
          }
+        nColors = colorsFound.size();
 
-        for(int i=0; i < noOfColors; i++){
-            setColorLabel(map.get(colorsFound.get(i)).get(3), colorsFound.get(i), textSize);
-        }
+//        for(int i=0; i < noOfColors; i++){
+//            setColorLabel(map.get(colorsFound.get(i)).get(3), colorsFound.get(i), textSize);
+//        }
     }
 
     private double getColorAtrributes(List<MatOfPoint> colorContours) {
