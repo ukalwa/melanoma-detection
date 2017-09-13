@@ -336,13 +336,13 @@ public class ProcessImage extends Activity {
         Imgproc.drawContours(originalMat, contours, maxAreaIdx, new Scalar(255, 255, 255, 255), 2);
         if(isMelanoma>0){
             displayImageView(originalMat,imageView1,imageTitleText1,resultText1,
-                    "Original Image with Contour", "<h3><font color = 'red'> " +
+                    "Result", "<h3><font color = 'red'> " +
                             "Suspicious of Melanoma</font></h3>",
                     "final", false);
         }
         else{
             displayImageView(originalMat,imageView1,imageTitleText1,resultText1,
-                    "Original Image with Contour", "<h3><font color = 'green'> " +
+                    "Result", "<h3><font color = 'green'> " +
                             "Benign</font></h3>",
                     "final", false);
         }
