@@ -3,10 +3,13 @@ package ukalwa.moledetection;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.os.Environment;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
@@ -16,6 +19,7 @@ import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.GridView;
 import android.widget.ImageView;
+import android.Manifest;
 
 import java.io.File;
 import java.io.FilenameFilter;
@@ -37,65 +41,47 @@ public class GetPreviousPictures extends Activity {
 	private Button b2,proceed_button;
 	private GridView g;
 
+
     /** Called when the activity is first created. */
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_get_previous_pictures);
+        // Here, thisActivity is the current activity
 
+        readImages();
+        
+    }
+
+    private void readImages(){
         g = (GridView) findViewById(R.id.get_pictures);
         g.setAdapter(new ImageAdapter(this, ReadSDCard()));
-        
-        //registerForContextMenu(g);
-        
-        
 
         g.setOnItemClickListener(new OnItemClickListener() {
 
-			public void onItemClick(AdapterView<?> parent, View v,
-                    int position, long id) {
-                
-    
-                
+            public void onItemClick(AdapterView<?> parent, View v,
+                                    int position, long id) {
+
                 b2 = (Button) findViewById(R.id.button2);
                 proceed_button = (Button) findViewById(R.id.proceed_button);
                 imageView = (ImageView) findViewById(R.id.full_image_view);
-                
+
                 g.setVisibility(View.GONE);
                 imageView.setVisibility(View.VISIBLE);
                 b2.setVisibility(View.VISIBLE);
                 proceed_button.setVisibility(View.VISIBLE);
-               // Toast.makeText(GetPreviousPictures.this, "" + position,
-                //        Toast.LENGTH_SHORT).show();
 
-//                System.out.println("Inside Onclick...............+position");
-
-                //setContentView(R.layout.full_image);
-                
                 addListenerOnButton2();
                 addListenerOnButtonProceed();
 
-//                System.out.println("inside the full image?????????????????????????????????");
-
-
-                 //Intent i = new Intent(GetPreviousPictures.this, imageViewFlipper.class);
-                // passing array index
-                // i.putExtra("id", position);
-                //  startActivity(i);
-//                System.out
-//                        .println("Inside the intent////////////////////////////////////");
                 filePath = files[position].getPath();
                 bm = BitmapFactory.decodeFile(filePath);
                 imageView.setImageBitmap(bm);
-
-
-//                System.out
-//                        .println("Inside ihe image view///////////////////????????????????????????");
             }
         });
-        //registerForContextMenu(g);
-        
     }
+
+
     
     public void addListenerOnButton2() {
 		 

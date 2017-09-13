@@ -5,6 +5,7 @@
 
 // third party headers
 #include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/core/core.hpp>
 
 // Custom headers
 #include "linked_list.hpp"
@@ -22,9 +23,9 @@ int max_area_pos;
 int rows,cols;
 size_t cnt;
 
-vector<vector<Point> > contours;
-vector<Vec4i> hierarchy;
-vector<Point> break_points;
+std::vector<std::vector<Point> > contours;
+std::vector<Vec4i> hierarchy;
+std::vector<Point> break_points;
 
 void get_active_contour(Mat img, Mat mGr, int iterations, int init_contour) {
     /********************************************************************************************
@@ -200,7 +201,7 @@ void stitch_contour_breaks(Mat contour_image) {
     Point pt3 = Point(0,0); // Initialize pt3 incase breaks happen on different axes
     unsigned temp_idx;
     // Paired point indexes are stored to avoid each point from forming additional pairs
-    vector<int> idx_array;
+    std::vector<int> idx_array;
     bool flag_x;
     unsigned min_dist_pos = 0;
     double min_dist, dist;
@@ -378,5 +379,16 @@ extern "C" {
                 }
             }
         }
+    }
+
+    JNIEXPORT void JNICALL Java_ukalwa_moledetection_ProcessImage_Compare(JNIEnv * env,
+            jobject, jlong original_img, jlong flipped_img, jlong compared_img)
+    {
+        // Initialize the Mat objects received from JNI Native call
+        Mat& orig_img  = *(Mat*)original_img; // Convert jlong image sent from java
+        Mat& flip_img  = *(Mat*)flipped_img;
+        Mat& result_img  = *(Mat*)compared_img;
+
+        compare(orig_img, flip_img, result_img, CMP_EQ);
     }
 }

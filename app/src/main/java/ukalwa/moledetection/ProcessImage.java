@@ -43,15 +43,17 @@ import org.opencv.core.Rect;
 import org.opencv.core.RotatedRect;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
-import org.opencv.highgui.Highgui;
+import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.imgproc.Moments;
+import org.opencv.ml.SVM;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.os.Bundle;
+import android.os.Environment;
 import android.text.Html;
 import android.util.Log;
 import android.view.View;
@@ -62,11 +64,16 @@ import android.widget.TextView;
 import android.widget.ViewFlipper;
 
 public class ProcessImage extends Activity {
-
+    private static final String classifierFile = "opencv_svm.xml";
     protected static final String TAG = "ProcessImage::Activity";
+    private static final String mDirName = "MoleDetection";
+
+    private static String mDirectory = Environment.getExternalStorageDirectory().getAbsolutePath() + "/" + mDirName;
+    private static String classifierXml = mDirectory + "/" + classifierFile;
 
     private long startTime;
     private String message;
+    private int isMelanoma = 0;
 
     // Initialization of Android UI params
     private ViewFlipper mViewFlipper;
@@ -101,7 +108,7 @@ public class ProcessImage extends Activity {
     private Mat rot_mat;
     private MatOfPoint contour;
     private Mat diffHorizontal, diffVertical;
-    private ArrayList<Number> featureSet;
+    private ArrayList<Double> featureSet;
     private double newWidth, newHeight;
     private int centroid_x, centroid_y;
     private Mat originalMat, imageMat;
@@ -126,19 +133,23 @@ public class ProcessImage extends Activity {
 
     private ProcessImage context;
     private boolean processed = false;
+    static{
+        System.loadLibrary("opencv_java3");
+    }
 
     private BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this) {
         @Override
         public void onManagerConnected(int status) {
             switch (status) {
-                case LoaderCallbackInterface.SUCCESS: {
-                    if (!processed) {
+                case LoaderCallbackInterface.SUCCESS:
+                {
+                    if(!processed){
                         // Display progress
                         pDialog = ProgressDialog.show(context, "Loading Data", "Please Wait...", true);
-
                         new Thread(new Runnable() {
                             @Override
-                            public void run() {
+                            public void run()
+                            {
                                 Log.i(TAG, "OpenCV loaded successfully");
                                 System.out.print("OpenCV loaded successfully");
                                 System.loadLibrary("active_contour");
@@ -146,7 +157,8 @@ public class ProcessImage extends Activity {
                                 processImage();
                                 runOnUiThread(new Runnable() {
                                     @Override
-                                    public void run() {
+                                    public void run()
+                                    {
                                         displayResults();
                                         pDialog.dismiss();
                                         processed = true;
@@ -156,13 +168,12 @@ public class ProcessImage extends Activity {
                         }).start();
                     }
 
-                }
-                break;
-                default: {
+                } break;
+                default:
+                {
                     super.onManagerConnected(status);
                     System.out.print("OpenCV loading failed");
-                }
-                break;
+                } break;
             }
         }
     };
@@ -212,9 +223,6 @@ public class ProcessImage extends Activity {
         imageView3 = (ImageView) findViewById(R.id.image3);
         imageView4 = (ImageView) findViewById(R.id.image4);
         imageView5 = (ImageView) findViewById(R.id.image5);
-//        imageViewAbove = (ImageView) findViewById(R.id.color_image2);
-//        resultImage = (ImageView) findViewById(R.id.result_image);
-//        textViewColor = (TextView) findViewById(R.id.textViewColor);
 
         imageTitleText1 = (TextView) findViewById(R.id.ImageTitleText1);
         imageTitleText2 = (TextView) findViewById(R.id.ImageTitleText2);
@@ -228,8 +236,6 @@ public class ProcessImage extends Activity {
         resultText4 = (TextView) findViewById(R.id.resultText4);
         resultText5 = (TextView) findViewById(R.id.resultText5);
 
-//        resultView = (TextView) findViewById(R.id.resultView);
-//        resultTitle = (TextView) findViewById(R.id.ResultTitle);
     }
 
 
@@ -238,12 +244,12 @@ public class ProcessImage extends Activity {
         performanceMetric = new ArrayList<>();
         Log.i(TAG, "fileName : " + message);
         StringTokenizer str = new StringTokenizer(message, ".");
-        originalMat = Highgui.imread(message);
+        originalMat = Imgcodecs.imread(message);
         rot_mat = new Mat(); // Rotation matrix to store lesion rotation params
-//        // Log.i(TAG, "img dims : " + originalMat.channels() + originalMat.width() +
-//                originalMat.height());
-        // Log.i(TAG, "Original Mat dims : " + this.originalMat.channels() + "," +
-//                this.originalMat.width() + "," + this.originalMat.height());
+        Log.i(TAG, "img dims : " + originalMat.channels() + originalMat.width() +
+                originalMat.height());
+        Log.i(TAG, "Original Mat dims : " + this.originalMat.channels() + "," +
+                this.originalMat.width() + "," + this.originalMat.height());
 
         // Number of iterations to evolve the active contour represented by different colors
         Map<Integer, Scalar> iterationsArray = new HashMap<>();
@@ -254,7 +260,6 @@ public class ProcessImage extends Activity {
 
         // filename without extension to save processed images locally on the device
         fileWithoutExtension = str.nextToken();
-
         /*******************************************************************************************
          * Preprocessing Stage
          ******************************************************************************************/
@@ -309,35 +314,53 @@ public class ProcessImage extends Activity {
 //        int nColors=0;
         extractFeaturesColor();
         end = System.currentTimeMillis();
-        performanceMetric.add(end - start); // end execution of color feature extraction
+        performanceMetric.add(end-start); // end execution of color feature extraction
+
+        /*******************************************************************************************
+         * Feature classification stage
+         ******************************************************************************************/
+        start = System.currentTimeMillis(); // start execution of color feature extraction
+//      int nColors=0;
+        isMelanoma = classifyLesion();
+        end = System.currentTimeMillis();
+        performanceMetric.add(end-start); // end execution of color feature extraction
 
         return 0;
     }
 
-    private void displayResults() {
+    private void displayResults(){
         /*******************************************************************************************
          * Display results in Android views
          ******************************************************************************************/
         // Main image (Contour overlaid image)
         Imgproc.drawContours(originalMat, contours, maxAreaIdx, new Scalar(255, 255, 255, 255), 2);
-        displayImageView(originalMat, imageView1, imageTitleText1, resultText1,
-                "Original Image with Contour", "<h3><font color = 'red'> " +
-                        "Suspicious of Melanoma</font></h3>",
-                "final", true);
+        if(isMelanoma>0){
+            displayImageView(originalMat,imageView1,imageTitleText1,resultText1,
+                    "Original Image with Contour", "<h3><font color = 'red'> " +
+                            "Suspicious of Melanoma</font></h3>",
+                    "final", false);
+        }
+        else{
+            displayImageView(originalMat,imageView1,imageTitleText1,resultText1,
+                    "Original Image with Contour", "<h3><font color = 'green'> " +
+                            "Benign</font></h3>",
+                    "final", false);
+        }
+
 
         // Segmented image with white background
-        displayImageView(segmentedImage, imageView2, imageTitleText2, resultText2,
+        displayImageView(segmentedImage,imageView2,imageTitleText2,resultText2,
                 "Segmented Image", "",
                 "segmented", false);
 
         // Vertical Asymmetry
-        displayImageView(diffVertical, imageView3, imageTitleText3, resultText3,
+        displayImageView(diffVertical,imageView3,imageTitleText3,resultText3,
                 "Vertical Asymmetry", "<h4>" + "A_V :" + featureSet.get(0).toString() + "," +
                         " B :" + featureSet.get(2).toString() + "</h4>",
                 "roi_vertical", false);
 
         // Horizontal Asymmetry
-        displayImageView(diffHorizontal, imageView4, imageTitleText4, resultText4,
+        displayImageView(diffHorizontal,imageView4,imageTitleText4,resultText4,
                 "Horizontal Asymmetry", "<h4>" + "A_H :" + featureSet.get(1).toString() + "," +
                         " D :" + featureSet.get(3).toString() + "</h4>",
                 "roi_horizontal", false);
@@ -348,7 +371,7 @@ public class ProcessImage extends Activity {
 //            matrixAbove.copyTo(matrixAbove);
 //        Utils.matToBitmap(matrixAbove, aboveBmp);
 //        imageViewAbove.setImageBitmap(aboveBmp);
-        displayImageView(colorImage, imageView5, imageTitleText5, resultText5,
+        displayImageView(colorImage,imageView5,imageTitleText5, resultText5,
                 "Number of colors", "<h4>" + "C :" + featureSet.get(10).toString() + "</h4>",
                 "colors", false);
 
@@ -358,12 +381,12 @@ public class ProcessImage extends Activity {
 //        resultView.setText(Html.fromHtml("<h3><font color = 'red'> Suspicious of Melanoma</font></h3>"));
 
         // Log results to console
-//         Log.i(TAG, "Feature set:" + Arrays.toString(featureSet.toArray()));
+        Log.i(TAG, "Feature set:" + Arrays.toString(featureSet.toArray()));
         Log.i(TAG, "Individual Execution times:" + Arrays.toString(performanceMetric.toArray()));
         Log.i(TAG, "Total Execution time:" + Long.toString(System.currentTimeMillis() - startTime));
 
         // Save results to text file
-        writeToFile(fileWithoutExtension + ".txt", "Feature set:" +
+        writeToFile(fileWithoutExtension+".txt","Feature set:" +
                 Arrays.toString(featureSet.toArray()) + "\n" +
                 "Individual Execution times:" + Arrays.toString(performanceMetric.toArray()) +
                 "\n" + "Total Execution time:" +
@@ -378,8 +401,8 @@ public class ProcessImage extends Activity {
         double init_width = 0.5;
         int shape = 0;
         ActiveContour(imageMat.getNativeObjAddr(), contourMask.getNativeObjAddr(),
-                    iterations, shape, init_width, init_height, iter_list,
-                    energy_list, gaussian_list);
+                iterations, shape, init_width, init_height, iter_list,
+                energy_list, gaussian_list);
 
         AbstractMap.SimpleEntry<Integer, List<MatOfPoint>> retVal =
                 extractLargestContour(contourMask);
@@ -410,7 +433,7 @@ public class ProcessImage extends Activity {
 
         Imgproc.findContours(contourMask, contours, mHierarchy, Imgproc.RETR_TREE,
                 Imgproc.CHAIN_APPROX_SIMPLE);
-//        Log.i(TAG, "Contours size : " + contours.size());
+        Log.i(TAG, "Contours size : " + contours.size());
 
         if (contours.size() == 0){
             Log.i(TAG, "Active contour screwed up");
@@ -432,11 +455,11 @@ public class ProcessImage extends Activity {
 
         MatOfPoint2f point2F = new MatOfPoint2f(contour.toArray());
         RotatedRect ellipse = Imgproc.fitEllipse(point2F);
-        maxArea = Imgproc.contourArea(contour);
+        maxArea = Core.countNonZero(contourMask);
 
         double angle = ellipse.angle;
-        // Log.i(TAG, "rotation angle,width,height : " + angle + "," + ellipse.size.width + "," +
-//                ellipse.size.height);
+        Log.i(TAG, "rotation angle,width,height : " + angle + "," + ellipse.size.width + "," +
+                ellipse.size.height);
         if (ellipse.size.width < ellipse.size.height) {
             if (angle < 90)
                 angle -= 90;
@@ -450,8 +473,8 @@ public class ProcessImage extends Activity {
 
         newWidth = (int) ((rows *sin)+(cols *cos));
         newHeight = (int) ((rows *cos)+(cols * sin));
-        // Log.i(TAG, "rot mat : " + rot_mat.dump());
-        // Log.i(TAG, "cos, sin : " + Double.toString(cos)+ Double.toString(sin));
+        Log.i(TAG, "rot mat : " + rot_mat.dump());
+        Log.i(TAG, "cos, sin : " + Double.toString(cos)+ Double.toString(sin));
         rot_mat.get(0,2)[0] += newWidth/2 - cols /2;
         rot_mat.get(1,2)[0] += newHeight/2 - rows /2;
 
@@ -474,33 +497,41 @@ public class ProcessImage extends Activity {
         Mat contourRegion = rotated_mask.clone();
         Mat flipContourHorizontal = new Mat(contourRegion.size(), CvType.CV_8UC1);
         Mat flipContourVertical = new Mat(contourRegion.size(), CvType.CV_8UC1);
-        diffHorizontal = new Mat(contourRegion.size(), CvType.CV_8UC1);
-        diffVertical = new Mat(contourRegion.size(), CvType.CV_8UC1);
 
         Core.flip(contourRegion, flipContourHorizontal, 1);
         Core.flip(contourRegion, flipContourVertical, 0);
-        Core.compare(contourRegion, flipContourHorizontal, diffHorizontal, Core.CMP_EQ);
-        Core.compare(contourRegion, flipContourVertical, diffVertical, Core.CMP_EQ);
+        diffHorizontal = Mat.zeros(contourRegion.size(),contourRegion.type());
+        diffVertical = Mat.zeros(contourRegion.size(),contourRegion.type());
 
+        Log.i(TAG, "mean : " + Core.mean(flipContourHorizontal) + "," + Core.mean(flipContourVertical));
+        Log.i(TAG, "mean : " + Core.mean(contourRegion));
+        Log.i(TAG, "reached end new compare");
+//        Core.compare(contourRegion, flipContourHorizontal, diffHorizontal, Core.CMP_EQ);
+//        Core.compare(contourRegion, flipContourVertical, diffVertical, Core.CMP_EQ);
+        Compare(contourRegion.getNativeObjAddr(), flipContourHorizontal.getNativeObjAddr(),
+                diffHorizontal.getNativeObjAddr());
+        Compare(contourRegion.getNativeObjAddr(), flipContourVertical.getNativeObjAddr(),
+                diffVertical.getNativeObjAddr());
+        Log.i(TAG, "reached end 44");
         Core.bitwise_not(diffHorizontal, diffHorizontal);
         Core.bitwise_not(diffVertical, diffVertical);
         double hAsym = Core.countNonZero(diffHorizontal);
         double vAsym = Core.countNonZero(diffVertical);
-
+        Log.i(TAG, "reached end 5");
         flipContourHorizontal.release();
         flipContourVertical.release();
-
-        featureSet.add(hAsym);
-        featureSet.add(vAsym);
-        featureSet.add(b);
-        featureSet.add((int) Math.max(ellipse.size.width, ellipse.size.height));
-        featureSet.add((int) Math.min(ellipse.size.width, ellipse.size.height));
+        Log.i(TAG, "reached end 6");
+        featureSet.add((double) Math.round (hAsym/maxArea * 10000.0) / 10000.0);
+        featureSet.add((double) Math.round (vAsym/maxArea * 10000.0) / 10000.0);
+        featureSet.add((double) Math.round (b * 10000.0) / 10000.0);
+        featureSet.add(Math.max(ellipse.size.width, ellipse.size.height));
+        featureSet.add(Math.min(ellipse.size.width, ellipse.size.height));
 
     }
 
-    private void extractFeaturesColor() {
+    private void extractFeaturesColor(){
 //        matrixAbove = Mat.ones(imageMat.size(), CvType.CV_8UC4);
-//        Log.i(TAG, "Mat Above" + matrixAbove.size());
+        Log.i(TAG, "Colors execution started");
 
         // My additions
         ColorDetection colorProcess = new ColorDetection();
@@ -518,12 +549,12 @@ public class ProcessImage extends Activity {
 //        matrixAbove = colorProcess.getLabelMatrix();
 
         // Log.i(TAG, "Mean" + String.valueOf(value_threshold));
-        Imgproc.cvtColor(colorImage, colorImgRGBA, Imgproc.COLOR_BGR2RGBA);
+        Imgproc.cvtColor(colorImage, colorImgRGBA,Imgproc.COLOR_BGR2RGBA );
 
         int nColors = colorProcess.getNumberOfColors();
-        // Log.i(TAG, "Colors" + String.valueOf(nColors));
+        Log.i(TAG, "Colors" + String.valueOf(nColors));
         // add no of colors to feature set
-        featureSet.add(nColors);
+        featureSet.add((double)nColors);
 //        textViewColor.setText("Colors: " + nColors);
 
     }
@@ -556,10 +587,10 @@ public class ProcessImage extends Activity {
 
     private void displayImageView(Mat resultMat, ImageView imageView, TextView textView,
                                   TextView resultText, String text, String result,
-                                  String fileExtension, boolean save) {
-        // Log.i(TAG,fileExtension + "," + resultMat.dims());
-        if (resultMat.channels() != 1 && resultMat.channels() != 4) {
-            Imgproc.cvtColor(resultMat, resultMat, Imgproc.COLOR_BGR2RGBA);
+                                  String fileExtension, boolean save){
+        Log.i(TAG,fileExtension + "," + resultMat.dims());
+        if(resultMat.channels() != 1 && resultMat.channels() != 4){
+            Imgproc.cvtColor(resultMat, resultMat,Imgproc.COLOR_BGR2RGBA );
         }
         Bitmap bmp = Bitmap.createBitmap(resultMat.cols(), resultMat.rows(),
                 Bitmap.Config.ARGB_8888);
@@ -567,9 +598,33 @@ public class ProcessImage extends Activity {
         imageView.setImageBitmap(bmp);
         textView.setText(text);
         resultText.setText(Html.fromHtml(result));
-        if (save) {
+        if(save){
             saveImage(fileWithoutExtension + "_" + fileExtension + ".PNG", bmp);
         }
+    }
+
+    private int classifyLesion(){
+        SVM svm = SVM.load(classifierXml);
+        svm.setC(3.0); svm.setGamma(0.1); svm.setKernel(SVM.LINEAR); svm.setDegree(5);
+        Mat sample = Mat.zeros(new Size(11,1),CvType.CV_32FC1);
+        sample.put(0, 0, featureSet.get(0)); // A1
+        sample.put(0, 1, featureSet.get(1)); // A2
+        sample.put(0, 2, featureSet.get(2)); // B
+        sample.put(0, 3, featureSet.get(10)); // C
+        sample.put(0, 4, featureSet.get(5)); // A_B
+        sample.put(0, 5, featureSet.get(6)); // A_BG
+        sample.put(0, 6, featureSet.get(7)); // A_DB
+        sample.put(0, 7, featureSet.get(8)); // A_LB
+        sample.put(0, 8, featureSet.get(9)); // A_W
+        sample.put(0, 9, featureSet.get(3)); // D1
+        sample.put(0, 10,featureSet.get(4)); // D2
+
+        Log.i(TAG, "features passed : " + sample.dump() + sample.cols());
+        Log.i(TAG, "SVM params :" + svm.getC() + "," + svm.getDegree() +
+                "," + svm.getGamma() + "," + svm.getVarCount());
+        int result = (int)svm.predict(sample);
+        Log.i(TAG, "Classification result : " + Integer.toString(result));
+        return result;
     }
 
 
@@ -577,7 +632,7 @@ public class ProcessImage extends Activity {
     public void onResume()
     {
         super.onResume();
-        OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_2_4_8, this, mLoaderCallback);
+        OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_3_0_0, this, mLoaderCallback);
     }
 
     @Override
@@ -599,7 +654,7 @@ public class ProcessImage extends Activity {
             bm2.compress(Bitmap.CompressFormat.PNG, 100, out);
         } catch (FileNotFoundException e) {
             e.printStackTrace();
-            // Log.i(TAG,"FileNotFound");
+            Log.i(TAG,"FileNotFound");
         }
         finally{
             try {
@@ -614,6 +669,7 @@ public class ProcessImage extends Activity {
     }
 
     private void writeToFile(String fileName,String data) {
+        Log.i(TAG, "text Filename : " + fileName);
         try {
             FileOutputStream outputStreamWriter = new FileOutputStream(new File(fileName));
             outputStreamWriter.write(data.getBytes());
@@ -628,4 +684,6 @@ public class ProcessImage extends Activity {
                                      int init_contour, double init_width_java,
                                      double init_height_java, int[] iter_list,
                                      int[] energy_list, double[] gaussian_list);
+
+    public native void Compare(long matAddrOrig,long matAddrFlip,long matAddrCompared);
 }

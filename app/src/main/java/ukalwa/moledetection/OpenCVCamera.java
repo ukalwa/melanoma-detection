@@ -21,7 +21,7 @@ import org.opencv.core.Point;
 import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
-import org.opencv.highgui.Highgui;
+import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 
 import android.annotation.SuppressLint;
@@ -46,7 +46,7 @@ import android.widget.Toast;
 @SuppressLint("ClickableViewAccessibility")
 @SuppressWarnings("deprecation")
 public class OpenCVCamera extends Activity implements CvCameraViewListener2,OnTouchListener  {
-	private static final String TAG = "MoleDetection::OpenCVCamera";
+	private static final String TAG = "MoleDetection::Camera";
 	private static final String mDirName = "MoleDetection";
 	private Button button;
 	private boolean buttonClicked=false;
@@ -149,7 +149,7 @@ public class OpenCVCamera extends Activity implements CvCameraViewListener2,OnTo
 		        		"/" + mDirName +
 		                               "/SDA_" + currentDateandTime + "_" + mCounter.toString() + ".jpg";
 		        Imgproc.cvtColor(mSubResult, mSubResult, Imgproc.COLOR_RGB2BGRA);
-		        Highgui.imwrite(fileName, mSubResult);
+		        Imgcodecs.imwrite(fileName, mSubResult);
 		        mOpenCvCameraView.disableView();
 		        button.setText("Proceed");
 		        //mOpenCvCameraView.takePicture(fileName);
@@ -253,7 +253,7 @@ public class OpenCVCamera extends Activity implements CvCameraViewListener2,OnTo
 		Mat mSubHsv = new Mat(mRoi.size(), CvType.CV_8UC4);
 		//Scalar sc = Core.mean(mSubHsv);
 		
-		Imgproc.GaussianBlur(mRoi, mRoi ,new Size(5,5) , 0, 0, Imgproc.BORDER_DEFAULT);
+		Imgproc.GaussianBlur(mRoi, mRoi ,new Size(5,5) , 0, 0, Core.BORDER_DEFAULT);
         
         Log.i(TAG, "Avg pixel value : " + mBlobColorHsv.val[0]);
        //Imgproc.pyrDown(mPyrDownMat, mPyrDownMat);
@@ -285,7 +285,7 @@ public class OpenCVCamera extends Activity implements CvCameraViewListener2,OnTo
 		mGray.release();
 		mBlur.release();*/
 		//Imgproc.resize(mIntermediateMatsub, mResult, mRgba.size());
-		Core.rectangle(mRgba, pt1, pt2, CONTOUR_COLOR, 2);
+		 Imgproc.rectangle(mRgba, pt1, pt2, CONTOUR_COLOR, 2);
 		//Core.circle(mRgba, CentrePt, 4, CONTOUR_COLOR,-2,4,0);
 		//Core.circle(mRgba, CentrePt, (int) ((CentrePt.x)*0.125), CONTOUR_COLOR);
 		mIntermediateMatsub.release();

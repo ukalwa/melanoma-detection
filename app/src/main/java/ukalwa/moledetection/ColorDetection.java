@@ -99,7 +99,7 @@ class ColorDetection{
         this.value_threshold = value_threshold;
     }
 
-    void getAllColorContours(Mat mask_img, Mat img, ArrayList<Number> featureSet){
+    void getAllColorContours(Mat mask_img, Mat img, ArrayList<Double> featureSet){
         Map<String, ArrayList<Scalar>> map = new HashMap<>();
         map.put("Black",new ArrayList<Scalar>(){{
             add(new Scalar(0,0,0));
@@ -183,7 +183,7 @@ class ColorDetection{
         int sizeSquare = (labelMatrix.height() / totalColors) - 4;
         Mat colorLabel = labelMatrix.submat(4 + nColors * sizeSquare, (nColors + 1) * sizeSquare, 4, sizeSquare);
         colorLabel.setTo(colorPrint);
-        Core.putText(labelMatrix, colorName, new Point( sizeSquare + 2, sizeSquare/2 +nColors*sizeSquare ), 1, textSize, new Scalar(0, 0, 0, 255), 2);
+        Imgproc.putText(labelMatrix, colorName, new Point( sizeSquare + 2, sizeSquare/2 +nColors*sizeSquare ), 1, textSize, new Scalar(0, 0, 0, 255), 2);
         //Core.putText(helpMatrix, colorName, new Point( sizeSquare + 2, 25+nColors*sizeSquare ), 1, textSize, new Scalar(0, 0, 0, 255), 1);
         nColors++;
     }

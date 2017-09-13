@@ -5,7 +5,7 @@ android {
     buildToolsVersion '23.0.3'
     defaultConfig {
         applicationId "ukalwa.moledetection"
-        minSdkVersion 17
+        minSdkVersion 19
         targetSdkVersion 23
         versionCode 1
         versionName "1.0"
@@ -18,12 +18,32 @@ android {
             cmake {
                 cppFlags "-frtti -fexceptions"
                 abiFilters 'armeabi-v7a','x86'
-                arguments '-DANDROID_PLATFORM=android-17',
+                arguments '-DANDROID_PLATFORM=android-19',
                         '-DANDROID_TOOLCHAIN=clang', '-DANDROID_STL=gnustl_static',
                         '-DPROJECT_ROOT='+projectDir, '-DOPENCV_SDK='+System.getenv('OPENCV_SDK')
             }
         }
     }
+    sourceSets {
+        main {
+            jni.srcDirs = []
+            jniLibs.srcDirs = ['src/main/jniLibs']
+        }
+    }
+//
+//    Properties properties = new Properties()
+//    properties.load(project.rootProject.file('local.properties').newDataInputStream())
+//    def ndkDir = properties.getProperty('ndk.dir')
+//    task ndkBuild(type: Exec, description: 'Compile JNI via NDK'){
+//        commandLine "$ndkDir\\ndk-build.cmd",
+//                'NDK_PROJECT_PATH=build/intermediates/ndk',
+//                'NDK_LIBS_OUT=src/main/jniLibs',
+//                'APP_BUILD_SCRIPT=src/main/cpp/Android.mk',
+//                'NDK_APPLICATION_MK=src/main/cpp/Application.mk'
+//    }
+//    tasks.withType(JavaCompile){
+//        compileTask -> compileTask.dependsOn  ndkBuild
+//    }
     buildTypes {
         release {
             minifyEnabled false
@@ -35,11 +55,7 @@ android {
             path "CMakeLists.txt"
         }
     }
-    sourceSets {
-        main {
-            jniLibs.srcDirs = ['src/main/jniLibs']
-        }
-    }
+
 }
 
 dependencies {
@@ -48,7 +64,7 @@ dependencies {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
     testCompile 'junit:junit:4.12'
-    compile project(':openCVLibrary2410')
     compile 'com.google.android.gms:play-services:10.2.4'
     //compile 'com.android.support:appcompat-v7:23.2.1'
+    compile project(':openCVLibrary320')
 }
