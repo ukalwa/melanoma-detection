@@ -245,6 +245,13 @@ public class ProcessImage extends Activity {
         Log.i(TAG, "fileName : " + message);
         StringTokenizer str = new StringTokenizer(message, ".");
         originalMat = Imgcodecs.imread(message);
+        int max_dim = Math.max(originalMat.rows(), originalMat.cols());
+        if (max_dim > 1024){
+            double ratio = max_dim/1024;
+            double nHeight = originalMat.rows() / ratio ;
+            double nWidth = originalMat.cols() / ratio ;
+            Imgproc.resize(originalMat, originalMat, new Size(nWidth, nHeight));
+        }
         rot_mat = new Mat(); // Rotation matrix to store lesion rotation params
         Log.i(TAG, "img dims : " + originalMat.channels() + originalMat.width() +
                 originalMat.height());
@@ -561,7 +568,7 @@ public class ProcessImage extends Activity {
 
     private Mat rotateMatImage(Mat image)
     {
-
+//        Mat image_copy = image.clone();
         Imgproc.warpAffine(image, image, rot_mat, new Size(newWidth, newHeight));
 
         List<MatOfPoint> contours = new ArrayList<>();
@@ -570,18 +577,21 @@ public class ProcessImage extends Activity {
         int maxAreaIdx = -1;
         Imgproc.findContours(image, contours, mHierarchy, Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_SIMPLE);
 
-        for (int idx = 0; idx < contours.size(); idx++) {
-            Mat contour = contours.get(idx);
-            double contourarea = Imgproc.contourArea(contour);
-            if (contourarea > maxArea) {
-                maxArea = contourarea;
-                maxAreaIdx = idx;
+        if (contours.size() > 0){
+            for (int idx = 0; idx < contours.size(); idx++) {
+                Mat contour = contours.get(idx);
+                double contourarea = Imgproc.contourArea(contour);
+                if (contourarea > maxArea) {
+                    maxArea = contourarea;
+                    maxAreaIdx = idx;
+                }
             }
+
+            MatOfPoint warpedContour = contours.get(maxAreaIdx);
+            Rect warpRect = Imgproc.boundingRect(warpedContour);
+            image = image.submat(warpRect);
         }
 
-        MatOfPoint warpedContour = contours.get(maxAreaIdx);
-        Rect warpRect = Imgproc.boundingRect(warpedContour);
-        image = image.submat(warpRect);
         return image;
     }
 

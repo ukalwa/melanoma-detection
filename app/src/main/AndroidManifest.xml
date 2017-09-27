@@ -11,18 +11,19 @@
 
     <uses-permission android:name="android.permission.CAMERA" />
 
-    <uses-feature
-        android:name="android.hardware.camera"
-        android:required="false" />
-    <uses-feature
-        android:name="android.hardware.camera.autofocus"
-        android:required="false" />
-    <uses-feature
-        android:name="android.hardware.camera.front"
-        android:required="false" />
-    <uses-feature
-        android:name="android.hardware.camera.front.autofocus"
-        android:required="false" />
+    <!--<uses-feature-->
+        <!--android:name="android.hardware.camera"-->
+        <!--android:required="false" />-->
+    <!--<uses-feature-->
+        <!--android:name="android.hardware.camera.autofocus"-->
+        <!--android:required="false" />-->
+    <!--<uses-feature-->
+        <!--android:name="android.hardware.camera.front"-->
+        <!--android:required="false" />-->
+    <!--<uses-feature-->
+        <!--android:name="android.hardware.camera.front.autofocus"-->
+        <!--android:required="false" />-->
+    <uses-feature android:name="android.hardware.camera2.full" />
 
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
@@ -58,7 +59,7 @@
             android:name=".OpenCVCamera"
             android:configChanges="keyboardHidden|orientation"
             android:label="@string/title_activity_open_cvcamera"
-            android:screenOrientation="landscape"
+            android:screenOrientation="portrait"
             android:theme="@android:style/Theme.NoTitleBar.Fullscreen" >
         </activity>
         <activity

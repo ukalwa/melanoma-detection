@@ -15,5 +15,6 @@
     <string name="title_activity_main_activity2">MainActivity2</string>
     <string name="title_activity_my_list">MyListActivity</string>
     <string name="title_activity_color_blob">ColorBlobDetection</string>
+    <string name="take_picture">Take picture</string>
 
 </resources>

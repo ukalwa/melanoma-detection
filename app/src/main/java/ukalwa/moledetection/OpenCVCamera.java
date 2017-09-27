@@ -1,364 +1,374 @@
+/**
+ *
+ *  @Class: Class OpenCVCamera
+ *   	Handles taking picture and saving it to sdcard
+ *
+ * 	@Version: 2.2
+ * 	@Author: Upender Kalwa
+ * 	@Created: 04/16/15
+ * 	@Modified_by Upender Kalwa
+ * 	@Modified: 08/30/17
+ *
+ * 	Implementation inspired from https://inducesmile.com/android/android-camera2-api-example-tutorial/
+ *
+ */
 package ukalwa.moledetection;
 
-import java.io.File;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.ListIterator;
-import java.util.Locale;
-
-import org.opencv.android.BaseLoaderCallback;
-import org.opencv.android.OpenCVLoader;
-import org.opencv.android.CameraBridgeViewBase.CvCameraViewFrame;
-import org.opencv.android.LoaderCallbackInterface;
-import org.opencv.android.CameraBridgeViewBase.CvCameraViewListener2;
-import org.opencv.core.Core;
-import org.opencv.core.CvType;
-import org.opencv.core.Mat;
-import org.opencv.core.MatOfPoint;
-import org.opencv.core.Point;
-import org.opencv.core.Rect;
-import org.opencv.core.Scalar;
-import org.opencv.core.Size;
-import org.opencv.imgcodecs.Imgcodecs;
-import org.opencv.imgproc.Imgproc;
-
-import android.annotation.SuppressLint;
+import android.Manifest;
 import android.app.Activity;
-import android.hardware.Camera;
+import android.content.Context;
+import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.ImageFormat;
+import android.graphics.SurfaceTexture;
+import android.hardware.camera2.CameraAccessException;
+import android.hardware.camera2.CameraCaptureSession;
+import android.hardware.camera2.CameraCharacteristics;
+import android.hardware.camera2.CameraDevice;
+import android.hardware.camera2.CameraManager;
+import android.hardware.camera2.CameraMetadata;
+import android.hardware.camera2.CaptureRequest;
+import android.hardware.camera2.TotalCaptureResult;
+import android.hardware.camera2.params.StreamConfigurationMap;
+import android.media.Image;
+import android.media.ImageReader;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
+import android.os.HandlerThread;
+import android.support.annotation.NonNull;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.util.Log;
-import android.view.Menu;
-import android.view.MenuItem;
-import android.view.MotionEvent;
-import android.view.SubMenu;
-import android.view.SurfaceView;
+import android.util.Size;
+import android.util.SparseIntArray;
+import android.view.Surface;
+import android.view.TextureView;
 import android.view.View;
-import android.view.View.OnClickListener;
-import android.view.View.OnTouchListener;
-import android.view.Window;
-import android.view.WindowManager;
 import android.widget.Button;
-import android.widget.Toast;
 
-@SuppressLint("ClickableViewAccessibility")
-@SuppressWarnings("deprecation")
-public class OpenCVCamera extends Activity implements CvCameraViewListener2,OnTouchListener  {
-	private static final String TAG = "MoleDetection::Camera";
-	private static final String mDirName = "MoleDetection";
-	private Button button;
-	private boolean buttonClicked=false;
-	private Mat mHierarchy;
-	private Mat mDilatedMask;
-	private Mat mIntermediateMatsub;
-	private Mat mHSVsub;
-	private Mat mHSV;
-	private Mat mPyrDownMat;
-	private CustomCameraView mOpenCvCameraView;
-	private Integer mCounter = 000; 
-	
-	private List<Camera.Size> mResolutionList;
-    private MenuItem[] mEffectMenuItems;
-    private SubMenu mColorEffectsMenu;
-    private MenuItem[] mResolutionMenuItems;
-    private SubMenu mResolutionMenu;
-    //private boolean              mIsColorSelected = false;
-    private Mat                  mRgba;
-    //private Scalar               mBlobColorRgba;
-    private Scalar               mBlobColorHsv;
-    //private ColorBlobDetector    mDetector;
-    private Mat                  mSpectrum;
-    //private Size                 SPECTRUM_SIZE;
-    private Scalar               CONTOUR_COLOR;
+import org.opencv.android.Utils;
+import org.opencv.core.Mat;
+import org.opencv.imgproc.CLAHE;
+import org.opencv.imgproc.Imgproc;
 
-    private Point pt,pt1,pt2,pt3,pt4,pt5,CentrePt;
-    //private Point pt6;
-    private Rect rect,rect2;
-    private Mat mResult,mSubResult,mRoi;
-    private boolean onTouch = false; 
-    //private Size mSize;
-	
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+public class OpenCVCamera extends Activity {
+    private static final String TAG = "OpenCVCamera";
+    private File mDirectory = new File(Environment.getExternalStorageDirectory(), "/" + mDirName);
+    private static final String mDirName = "MoleDetection";
+    private Button takePictureButton;
+    private TextureView textureView;
 
-	private BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this) {
-        @SuppressLint("LongLogTag")
-        @Override
-        public void onManagerConnected(int status) {
-            switch (status) {
-                case LoaderCallbackInterface.SUCCESS:
-                {
-                    Log.i(TAG, "OpenCV loaded successfully");
-                    mOpenCvCameraView.enableView();
-                    mOpenCvCameraView.setOnTouchListener(OpenCVCamera.this);
-                } break;
-                default:
-                {
-                    super.onManagerConnected(status);
-                } break;
+    static{
+        System.loadLibrary("opencv_java3");
+    }
+    private static final SparseIntArray ORIENTATIONS = new SparseIntArray();
+    static {
+        ORIENTATIONS.append(Surface.ROTATION_0, 90);
+        ORIENTATIONS.append(Surface.ROTATION_90, 0);
+        ORIENTATIONS.append(Surface.ROTATION_180, 270);
+        ORIENTATIONS.append(Surface.ROTATION_270, 180);
+    }
+    private String cameraId;
+    protected CameraDevice cameraDevice;
+    protected CameraCaptureSession cameraCaptureSessions;
+    protected CaptureRequest captureRequest;
+    protected CaptureRequest.Builder captureRequestBuilder;
+    private Size imageDimension;
+    private ImageReader imageReader;
+    private File file;
+    private static final int REQUEST_CAMERA_PERMISSION = 200;
+    private boolean mFlashSupported;
+    private Handler mBackgroundHandler;
+    private HandlerThread mBackgroundThread;
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_open_cvcamera);
+        textureView = (TextureView) findViewById(R.id.texture);
+        assert textureView != null;
+        textureView.setSurfaceTextureListener(textureListener);
+        takePictureButton = (Button) findViewById(R.id.btn_takepicture);
+        assert takePictureButton != null;
+        if (ContextCompat.checkSelfPermission(this,
+                Manifest.permission.CAMERA)
+                != PackageManager.PERMISSION_GRANTED) {
+
+            ActivityCompat.requestPermissions(this,
+                    new String[]{android.Manifest.permission.CAMERA},
+                    REQUEST_CAMERA_PERMISSION);
+
+        }
+        takePictureButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                takePicture();
             }
+        });
+    }
+    TextureView.SurfaceTextureListener textureListener = new TextureView.SurfaceTextureListener() {
+        @Override
+        public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
+            //open your camera here
+            openCamera();
+        }
+        @Override
+        public void onSurfaceTextureSizeChanged(SurfaceTexture surface, int width, int height) {
+            // Transform you image captured size according to the surface width and height
+        }
+        @Override
+        public boolean onSurfaceTextureDestroyed(SurfaceTexture surface) {
+            return false;
+        }
+        @Override
+        public void onSurfaceTextureUpdated(SurfaceTexture surface) {
         }
     };
-    
-    public OpenCVCamera() {
-        Log.i(TAG, "Instantiated new " + this.getClass());
-    }
-	@Override
-	protected void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
-		Log.i(TAG, "called onCreate");
-        super.onCreate(savedInstanceState);
-        requestWindowFeature(Window.FEATURE_NO_TITLE);
-        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-		setContentView(R.layout.activity_open_cvcamera);
-		mOpenCvCameraView = (CustomCameraView) findViewById(R.id.opencv_activity_java_surface_view);
-		mOpenCvCameraView.setVisibility(SurfaceView.VISIBLE);
-
-        mOpenCvCameraView.setCvCameraViewListener(this);
-        addListenerOnButton();
-        File mDirectory = new File(Environment.getExternalStorageDirectory(), "/" + mDirName);
-        if(!mDirectory.exists())
-        {
-        	if(!mDirectory.mkdir())
-        	{
-        		Log.i(TAG, "Unable to create directory");
-        	}
-        	Log.i(TAG, "Directory Created");
+    private final CameraDevice.StateCallback stateCallback = new CameraDevice.StateCallback() {
+        @Override
+        public void onOpened(CameraDevice camera) {
+            //This is called when the camera is open
+            Log.e(TAG, "onOpened");
+            cameraDevice = camera;
+            createCameraPreview();
         }
-	}
-	
-	public void addListenerOnButton() {
-		 
-		button = (Button) findViewById(R.id.button1);
-		final String  cs = button.getText().toString();
-		button.setOnClickListener(new OnClickListener() {
-
-			@Override
-			public void onClick(View v) {
-				if(!onTouch)
-					Toast.makeText(OpenCVCamera.this, "Please select atleast one picture before saving it", Toast.LENGTH_SHORT).show();
-				else if(cs.equals("Proceed"))
-				{
-					
-				}
-				else
-				{
-				SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss",Locale.US);
-		        String currentDateandTime = sdf.format(new Date());
-		        String fileName = Environment.getExternalStorageDirectory().getPath() +
-		        		"/" + mDirName +
-		                               "/SDA_" + currentDateandTime + "_" + mCounter.toString() + ".jpg";
-		        Imgproc.cvtColor(mSubResult, mSubResult, Imgproc.COLOR_RGB2BGRA);
-		        Imgcodecs.imwrite(fileName, mSubResult);
-		        mOpenCvCameraView.disableView();
-		        button.setText("Proceed");
-		        //mOpenCvCameraView.takePicture(fileName);
-		        Log.i(TAG,fileName);
-		        Toast.makeText(OpenCVCamera.this, fileName + " saved", Toast.LENGTH_SHORT).show();
-		        buttonClicked = true;
-				}
-			}
- 
-		});
- 
-	}
-
-	@Override
-    public void onPause()
-    {
-        super.onPause();
-        if (mOpenCvCameraView != null)
-            mOpenCvCameraView.disableView();
+        @Override
+        public void onDisconnected(CameraDevice camera) {
+            cameraDevice.close();
+        }
+        @Override
+        public void onError(CameraDevice camera, int error) {
+            cameraDevice.close();
+            cameraDevice = null;
+        }
+    };
+    final CameraCaptureSession.CaptureCallback captureCallbackListener = new CameraCaptureSession.CaptureCallback() {
+        @Override
+        public void onCaptureCompleted(CameraCaptureSession session, CaptureRequest request, TotalCaptureResult result) {
+            super.onCaptureCompleted(session, request, result);
+//            Toast.makeText(OpenCVCamera.this, "Saved:" + file, Toast.LENGTH_SHORT).show();
+            createCameraPreview();
+        }
+    };
+    protected void startBackgroundThread() {
+        mBackgroundThread = new HandlerThread("Camera Background");
+        mBackgroundThread.start();
+        mBackgroundHandler = new Handler(mBackgroundThread.getLooper());
+    }
+    protected void stopBackgroundThread() {
+        mBackgroundThread.quitSafely();
+        try {
+            mBackgroundThread.join();
+            mBackgroundThread = null;
+            mBackgroundHandler = null;
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+    protected void takePicture() {
+        if(null == cameraDevice) {
+            Log.e(TAG, "cameraDevice is null");
+            return;
+        }
+        CameraManager manager = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
+        try {
+            CameraCharacteristics characteristics = manager.getCameraCharacteristics(cameraDevice.getId());
+            Size[] jpegSizes = null;
+            if (characteristics != null) {
+                jpegSizes = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP).getOutputSizes(ImageFormat.JPEG);
+            }
+            int width = 1024;
+            int height = 768;
+//            if (jpegSizes != null && 0 < jpegSizes.length) {
+//                width = jpegSizes[0].getWidth();
+//                height = jpegSizes[0].getHeight();
+//            }
+            ImageReader reader = ImageReader.newInstance(width, height, ImageFormat.JPEG, 1);
+            Log.i(TAG,"Image height, width:"+ Integer.toString(height)+","+Integer.toString(width));
+            List<Surface> outputSurfaces = new ArrayList<Surface>(2);
+            outputSurfaces.add(reader.getSurface());
+            outputSurfaces.add(new Surface(textureView.getSurfaceTexture()));
+            final CaptureRequest.Builder captureBuilder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_STILL_CAPTURE);
+            captureBuilder.addTarget(reader.getSurface());
+            captureBuilder.set(CaptureRequest.CONTROL_MODE, CameraMetadata.CONTROL_MODE_AUTO);
+            // Orientation
+            int rotation = getWindowManager().getDefaultDisplay().getRotation();
+            captureBuilder.set(CaptureRequest.JPEG_ORIENTATION, ORIENTATIONS.get(rotation));
+            file = new File(mDirectory +"/camera001.jpg");
+            ImageReader.OnImageAvailableListener readerListener = new ImageReader.OnImageAvailableListener() {
+                @Override
+                public void onImageAvailable(ImageReader reader) {
+                    Image image = null;
+                    try {
+                        image = reader.acquireLatestImage();
+                        ByteBuffer buffer = image.getPlanes()[0].getBuffer();
+                        byte[] bytes = new byte[buffer.capacity()];
+                        buffer.get(bytes);
+                        Bitmap bitmapImage = BitmapFactory.decodeByteArray(bytes, 0, bytes.length, null);
+                        Mat mat_image = new Mat();
+                        Utils.bitmapToMat(bitmapImage, mat_image); //convert bitmap image to Mat image for image processing
+                        Imgproc.medianBlur(mat_image, mat_image ,15);
+//                        CLAHE claheDesc = Imgproc.createCLAHE(); //Initialize clahe
+//                        claheDesc.setClipLimit(2);
+//                        claheDesc.apply(mat_image, mat_image);
+                        Utils.matToBitmap(mat_image, bitmapImage); //convert processed Mat image back to  bitmap image
+                        save(bitmapImage);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    } finally {
+                        if (image != null) {
+                            image.close();
+                        }
+                    }
+                }
+                private void save(Bitmap bm) throws IOException {
+                    OutputStream output = null;
+                    try {
+                        output = new FileOutputStream(file);
+                        bm.compress(Bitmap.CompressFormat.JPEG, 100, output);
+                    } catch (FileNotFoundException e) {
+                        e.printStackTrace();
+                        Log.i(TAG,"FileNotFound");
+                    }finally {
+                        if (null != output) {
+                            output.flush();
+                            output.close();
+                        }
+                    }
+                }
+            };
+            reader.setOnImageAvailableListener(readerListener, mBackgroundHandler);
+            final CameraCaptureSession.CaptureCallback captureListener = new CameraCaptureSession.CaptureCallback() {
+                @Override
+                public void onCaptureCompleted(@NonNull CameraCaptureSession session, @NonNull CaptureRequest request, @NonNull TotalCaptureResult result) {
+                    super.onCaptureCompleted(session, request, result);
+//                    Toast.makeText(OpenCVCamera.this, "Saved:" + file, Toast.LENGTH_SHORT).show();
+                    createCameraPreview();
+                }
+            };
+            cameraDevice.createCaptureSession(outputSurfaces, new CameraCaptureSession.StateCallback() {
+                @Override
+                public void onConfigured(@NonNull CameraCaptureSession session) {
+                    try {
+                        session.capture(captureBuilder.build(), captureListener, mBackgroundHandler);
+                    } catch (CameraAccessException e) {
+                        e.printStackTrace();
+                    }
+                }
+                @Override
+                public void onConfigureFailed(@NonNull CameraCaptureSession session) {
+                }
+            }, mBackgroundHandler);
+        } catch (CameraAccessException e) {
+            e.printStackTrace();
+        }
+    }
+    protected void createCameraPreview() {
+        try {
+            SurfaceTexture texture = textureView.getSurfaceTexture();
+            assert texture != null;
+            texture.setDefaultBufferSize(imageDimension.getWidth(), imageDimension.getHeight());
+            Surface surface = new Surface(texture);
+            captureRequestBuilder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
+            captureRequestBuilder.addTarget(surface);
+            cameraDevice.createCaptureSession(Arrays.asList(surface), new CameraCaptureSession.StateCallback(){
+                @Override
+                public void onConfigured(@NonNull CameraCaptureSession cameraCaptureSession) {
+                    //The camera is already closed
+                    if (null == cameraDevice) {
+                        return;
+                    }
+                    // When the session is ready, we start displaying the preview.
+                    cameraCaptureSessions = cameraCaptureSession;
+                    updatePreview();
+                }
+                @Override
+                public void onConfigureFailed(@NonNull CameraCaptureSession cameraCaptureSession) {
+//                    Toast.makeText(OpenCVCamera.this, "Configuration change", Toast.LENGTH_SHORT).show();
+                }
+            }, null);
+        } catch (CameraAccessException e) {
+            e.printStackTrace();
+        }
+    }
+    private void openCamera() {
+        CameraManager manager = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
+        Log.e(TAG, "is camera open");
+        try {
+            cameraId = manager.getCameraIdList()[0];
+            CameraCharacteristics characteristics = manager.getCameraCharacteristics(cameraId);
+            StreamConfigurationMap map = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
+            assert map != null;
+            imageDimension = map.getOutputSizes(SurfaceTexture.class)[0];
+            // Add permission for camera and let user grant the permission
+            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(OpenCVCamera.this, new String[]{Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE}, REQUEST_CAMERA_PERMISSION);
+                return;
+            }
+            manager.openCamera(cameraId, stateCallback, null);
+        } catch (CameraAccessException e) {
+            e.printStackTrace();
+        }
+        Log.e(TAG, "openCamera X");
+    }
+    protected void updatePreview() {
+        if(null == cameraDevice) {
+            Log.e(TAG, "updatePreview error, return");
+        }
+        captureRequestBuilder.set(CaptureRequest.CONTROL_MODE, CameraMetadata.CONTROL_MODE_AUTO);
+        try {
+            cameraCaptureSessions.setRepeatingRequest(captureRequestBuilder.build(), null, mBackgroundHandler);
+        } catch (CameraAccessException e) {
+            e.printStackTrace();
+        }
+    }
+    private void closeCamera() {
+        if (null != cameraDevice) {
+            cameraDevice.close();
+            cameraDevice = null;
+        }
+        if (null != imageReader) {
+            imageReader.close();
+            imageReader = null;
+        }
+    }
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        if (requestCode == REQUEST_CAMERA_PERMISSION) {
+            if (grantResults[0] == PackageManager.PERMISSION_DENIED) {
+                // close the app
+//                Toast.makeText(OpenCVCamera.this, "Sorry!!!, you can't use this app without granting permission", Toast.LENGTH_LONG).show();
+                finish();
+            }
+        }
     }
 
     @Override
-    public void onResume()
-    {
+    protected void onResume() {
         super.onResume();
-        OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_2_4_3, this, mLoaderCallback);
-    }
-
-    public void onDestroy() {
-        super.onDestroy();
-        if (mOpenCvCameraView != null)
-            mOpenCvCameraView.disableView();
-    }
-    
-	@Override
-	public void onCameraViewStarted(int width, int height) {
-		// TODO Auto-generated method stub
-		mRgba = new Mat(height, width, CvType.CV_8UC4);
-		//mRgba = new Mat(height, width, CvType.CV_8UC1);
-		mHSV = new Mat();
-		mResult = new Mat();
-		mSubResult = new Mat((width+8)/2-width/4, (height-8)/2+height/4, CvType.CV_8UC4);
-	    mDilatedMask = new Mat();
-	    mHierarchy = new Mat();
-	    mHSVsub = new Mat();
-	    mIntermediateMatsub = new Mat();
-	    mPyrDownMat = new Mat();
-        //mDetector = new ColorBlobDetector();
-        mSpectrum = new Mat();
-        //mBlobColorRgba = new Scalar(255);
-        mBlobColorHsv = new Scalar(255);
-        //SPECTRUM_SIZE = new Size(200, 64);
-        //mSize = new Size(3,3);
-        CONTOUR_COLOR = new Scalar(255,255,255,255);
-        CentrePt = new Point(width/2,height/2);
-        pt = new Point((width+8)/2-width/8,(height+8)/2-height/8);
-        pt1 = new Point(width/2+width/8,height/2-height/8);
-		pt2 = new Point(width/2-width/8,height/2+height/8);
-		pt3 = new Point((width-8)/2+width/8,(height+8)/2-height/8);
-		pt4 = new Point((width+8)/2-width/8,(height-8)/2+height/8);
-		//For displaying enlarged image
-		pt5 = new Point (0,0);
-        //pt6 = new Point((width-8)/2+width/4,(height+8)/2-height/4);
-		rect = new Rect(pt3,pt4);
-		rect2 = new Rect(pt5,mSubResult.size());
-		
-	}
-	@Override
-	public void onCameraViewStopped() {
-		mRgba.release();
-		mHSV.release();
-		mResult.release();
-		mSubResult.release();
-	    mDilatedMask.release();
-	    mHierarchy.release();
-	    mHSVsub.release();
-	    mIntermediateMatsub.release();
-	    mPyrDownMat.release();
-        mSpectrum.release();
-	}
-	@Override
-	public Mat onCameraFrame(CvCameraViewFrame inputFrame) {
-		mRgba = inputFrame.rgba();
-		//mRgba = inputFrame.gray();
-		//Imgproc.cvtColor(mRgba, mHSV, Imgproc.COLOR_RGB2HSV_FULL);
-		mRoi = mRgba.submat(rect);
-		if(onTouch)
-			mSubResult.copyTo(mRgba.submat(rect2));
-		//Mat mSubGray = mRgba.submat(rect);
-		//Imgproc.cvtColor(mRoi, mSubGray, Imgproc.COLOR_RGB2HSV_FULL);
-		//Mat mBlur = new Mat();
-		/*Imgproc.GaussianBlur(mSubGray, mSubGray ,new Size(3,3) , 0, 0, Imgproc.BORDER_DEFAULT);
-		Imgproc.dilate(mSubGray, mSubGray, new Mat());
-        Imgproc.erode(mSubGray, mSubGray, new Mat());
-        Scalar sc = Core.mean(mSubGray);
-        Log.i(TAG, "Avg pixel value : " + sc.val[0]);
-        //Imgproc.Canny(mSubGray, mIntermediateMatsub, 180, 250);
-        Imgproc.threshold(mSubGray, mIntermediateMatsub, sc.val[0], 255, Imgproc.THRESH_OTSU | Imgproc.THRESH_BINARY);
-        //Imgproc.adaptiveThreshold(mSubGray, mIntermediateMatsub, sc.val[0], Imgproc.ADAPTIVE_THRESH_MEAN_C, Imgproc.THRESH_BINARY, 3, 1);
-        */
-		Mat mSubHsv = new Mat(mRoi.size(), CvType.CV_8UC4);
-		//Scalar sc = Core.mean(mSubHsv);
-		
-		Imgproc.GaussianBlur(mRoi, mRoi ,new Size(5,5) , 0, 0, Core.BORDER_DEFAULT);
-        
-        Log.i(TAG, "Avg pixel value : " + mBlobColorHsv.val[0]);
-       //Imgproc.pyrDown(mPyrDownMat, mPyrDownMat);
-		Imgproc.cvtColor(mRoi, mSubHsv, Imgproc.COLOR_RGB2HSV_FULL);
-		Imgproc.dilate(mSubHsv, mSubHsv, new Mat());
-        Imgproc.erode(mSubHsv, mSubHsv, new Mat());
-        Imgproc.Canny(mSubHsv, mIntermediateMatsub, 180, 180*2);
-        List<MatOfPoint> contours = new ArrayList<MatOfPoint>();
-
-        Imgproc.findContours(mIntermediateMatsub, contours, mHierarchy, Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_SIMPLE);
-        Imgproc.drawContours(mRgba, contours, -1, new Scalar(255,255,255,255), 4, 8, mHierarchy, 0, pt);
-        //mRoi = mRgba.submat(rect);
-
-		//Imgproc.resize(mRoi, mRgba, mRgba.size());
-		//mSubHsv.copyTo(mRoi);
-		//mSubHsv.copyTo(inputFrame.rgba().submat(rect));
-		//Imgproc.resize(mSubHsv, mRgba, mRgba.size());
-		//mRoi.release();
-        mSubHsv.release();
-		/*Mat mGray = new Mat(mRoi.size(), CvType.CV_8UC1);
-		Mat mBlur = new Mat();
-		//Imgproc.GaussianBlur(mRoi, mBlur , mSize , 0, 0, Imgproc.BORDER_DEFAULT);
-		Imgproc.cvtColor(mRoi, mGray, Imgproc.COLOR_RGB2GRAY);
-		//Imgproc.adaptiveThreshold(mGray, mGray, 255, Imgproc.ADAPTIVE_THRESH_GAUSSIAN_C, Imgproc.THRESH_BINARY, 3, 1);
-		Imgproc.threshold(mGray, mGray, 128, 255, Imgproc.THRESH_OTSU | Imgproc.THRESH_BINARY);
-		List<MatOfPoint> contours = new ArrayList<MatOfPoint>();
-		Imgproc.findContours(mGray, contours, mHierarchy, Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_SIMPLE);
-		Imgproc.drawContours(mRgba, contours, -1, new Scalar(255,255,255,255), 4, 8, mHierarchy, 0, pt);
-		mGray.release();
-		mBlur.release();*/
-		//Imgproc.resize(mIntermediateMatsub, mResult, mRgba.size());
-		 Imgproc.rectangle(mRgba, pt1, pt2, CONTOUR_COLOR, 2);
-		//Core.circle(mRgba, CentrePt, 4, CONTOUR_COLOR,-2,4,0);
-		//Core.circle(mRgba, CentrePt, (int) ((CentrePt.x)*0.125), CONTOUR_COLOR);
-		mIntermediateMatsub.release();
-		return mRgba;
-	}
-	
-	@Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        List<String> effects = mOpenCvCameraView.getEffectList();
-
-        if (effects == null) {
-            Log.e(TAG, "Color effects are not supported by device!");
-            return true;
+        Log.e(TAG, "onResume");
+        startBackgroundThread();
+        if (textureView.isAvailable()) {
+            openCamera();
+        } else {
+            textureView.setSurfaceTextureListener(textureListener);
         }
-
-        mColorEffectsMenu = menu.addSubMenu("Color Effect");
-        mEffectMenuItems = new MenuItem[effects.size()];
-
-        int idx = 0;
-        ListIterator<String> effectItr = effects.listIterator();
-        while(effectItr.hasNext()) {
-           String element = effectItr.next();
-           mEffectMenuItems[idx] = mColorEffectsMenu.add(1, idx, Menu.NONE, element);
-           idx++;
-        }
-
-        mResolutionMenu = menu.addSubMenu("Resolution");
-        mResolutionList = mOpenCvCameraView.getResolutionList();
-        mResolutionMenuItems = new MenuItem[mResolutionList.size()];
-        ListIterator<Camera.Size> resolutionItr = mResolutionList.listIterator();
-        idx = 0;
-        while(resolutionItr.hasNext()) {
-            Camera.Size element = resolutionItr.next();
-            mResolutionMenuItems[idx] = mResolutionMenu.add(2, idx, Menu.NONE,
-                    Integer.valueOf(element.width).toString() + "x" + Integer.valueOf(element.height).toString());
-            idx++;
-         }
-
-        return true;
     }
-
-    public boolean onOptionsItemSelected(MenuItem item) {
-        Log.i(TAG, "called onOptionsItemSelected; selected item: " + item);
-        if (item.getGroupId() == 1)
-        {
-            mOpenCvCameraView.setEffect((String) item.getTitle());
-            Toast.makeText(this, mOpenCvCameraView.getEffect(), Toast.LENGTH_SHORT).show();
-        }
-        else if (item.getGroupId() == 2)
-        {
-            int id = item.getItemId();
-            Camera.Size resolution = mResolutionList.get(id);
-            mOpenCvCameraView.setResolution(resolution);
-            resolution = mOpenCvCameraView.getResolution();
-            String caption = Integer.valueOf(resolution.width).toString() + "x" + Integer.valueOf(resolution.height).toString();
-            Toast.makeText(this, caption, Toast.LENGTH_SHORT).show();
-        }
-
-        return true;
-    }
-
-    @SuppressLint({ "SimpleDateFormat", "ClickableViewAccessibility" })
     @Override
-    public boolean onTouch(View v, MotionEvent event) {
-		if(buttonClicked)
-    		Toast.makeText(this, "Press Proceed button to process selected image", Toast.LENGTH_LONG).show();
-		else
-		{
-        Log.i(TAG,"onTouch event");
-        Imgproc.resize(mRoi, mSubResult, mSubResult.size());
-        onTouch = true;
-        mCounter++;
-		}
-        return false;
+    protected void onPause() {
+        Log.e(TAG, "onPause");
+        //closeCamera();
+        stopBackgroundThread();
+        super.onPause();
     }
 }

@@ -76,6 +76,13 @@ public class GetPreviousPictures extends Activity {
 
                 filePath = files[position].getPath();
                 bm = BitmapFactory.decodeFile(filePath);
+                int max_dim = Math.max(bm.getHeight(), bm.getWidth());
+                if (max_dim > 1024){
+                    double ratio = max_dim/1024;
+                    int nWidth = (int) ( bm.getWidth() / ratio );
+                    int nHeight = (int) ( bm.getHeight() / ratio) ;
+                    bm = Bitmap.createScaledBitmap(bm, nWidth, nHeight, true);
+                }
                 imageView.setImageBitmap(bm);
             }
         });
@@ -169,6 +176,14 @@ public class GetPreviousPictures extends Activity {
             if (convertView == null) {
                 imageView = new ImageView(mContext);
                 Bitmap bm = BitmapFactory.decodeFile(FileList.get(position));
+                int max_dim = Math.max(bm.getHeight(), bm.getWidth());
+                if (max_dim > 1024){
+                    double ratio = max_dim/1024;
+                    int nWidth = (int) ( bm.getWidth() / ratio );
+                    int nHeight = (int) ( bm.getHeight() / ratio) ;
+                    bm = Bitmap.createScaledBitmap(bm, nWidth, nHeight, true);
+                }
+
                 imageView.setImageBitmap(bm);
                 // imageView.setImageResource(FileList[position]);
                 imageView.setLayoutParams(new GridView.LayoutParams(175, 175));
