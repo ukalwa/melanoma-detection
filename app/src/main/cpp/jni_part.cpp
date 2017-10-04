@@ -1,7 +1,9 @@
 // in-built headers
 #include <jni.h>
+#include <android/log.h>
 #include <vector>
 #include <iostream>
+#include <sstream>
 
 // third party headers
 #include <opencv2/imgproc/imgproc.hpp>
@@ -26,6 +28,12 @@ size_t cnt;
 std::vector<std::vector<Point> > contours;
 std::vector<Vec4i> hierarchy;
 std::vector<Point> break_points;
+
+std::stringstream temp;
+
+void logger(const char* message){
+    __android_log_write(ANDROID_LOG_INFO, "JNI::DEBUG", message);
+}
 
 void get_active_contour(Mat img, Mat mGr, int iterations, int init_contour) {
     /********************************************************************************************
@@ -113,7 +121,7 @@ void find_contour_breaks() {
     Point pt1, pt2, pt3, v1, v2;
     double dotprod, norm1, norm2, cosine; // Parameters required to measure cosine of three points
     if (cnt > 0) {
-        std::cout << "break points : ";
+        temp.clear(); temp << "break points : ";
         // Loop through all the break points in the image (only occurs at the edges of the image)
         // We assume breaks happen in pairs (connecting them forms a complete contour)
         for (unsigned j = 0; j < cnt; j++) {
@@ -149,13 +157,13 @@ void find_contour_breaks() {
                     if ((pt2.x >= 0 && pt2.x <= 10) || (cols - pt2.x >= 0 && cols - pt2.x <= 10) ||
                         (pt2.y >= 0 && pt2.y <= 10) || (rows - pt2.y >= 0 && rows - pt2.y <= 10)) {
                         break_points.push_back(pt2); // add the point to the vector
-                        std::cout << pt2 << ",";
+                        temp << pt2 << ",";
                     }
                 }
             }
         }
     }
-    std::cout << break_points.size() << std::endl;
+    temp << break_points.size() << "\n"; logger(temp.str().c_str());
 }
 
 bool detect_break_diff_axes(Point &pt1, Point &pt2, Point &pt3) {
@@ -232,7 +240,7 @@ void stitch_contour_breaks(Mat contour_image) {
                     break;
                 }
             }
-            //std::cout << std::endl;
+            //std::cout << "\n";
             if (flag_x) // skip the point if it is paired
                 continue;
             for (unsigned j = i + 1; j < break_points.size(); j++) {
@@ -259,7 +267,7 @@ void stitch_contour_breaks(Mat contour_image) {
             temp_idx = min_dist_pos;
             idx_array.push_back(i);
             idx_array.push_back(temp_idx);
-            std::cout << "pairs formed : " << pt << break_points.at(temp_idx) << std::endl;
+            temp.clear(); temp << std::string("pairs formed : ") << pt << break_points.at(temp_idx) << "\n"; logger(temp.str().c_str());
             // Detect pairs on different axes
             if (detect_break_diff_axes(pt, break_points.at(temp_idx), pt3)) {
                 line(contour_image, pt, pt3, Scalar(255), 1);
@@ -314,43 +322,43 @@ extern "C" {
         for (int i = 0; i < sizeof(gaussian_params) / sizeof(gaussian_params[0]); i++) {
             gaussian_params[i] = gaussianArray[i];
         }
-        std::cout << "Gaussian passed : " << gaussian_params[0] << "," << gaussian_params[1] <<
-        std::endl;
+        temp.clear(); temp << "Gaussian passed : " << gaussian_params[0] << "," << gaussian_params[1] <<
+        "\n";
 
         for (int i = 0; i < sizeof(iter) / sizeof(iter[0]); i++) {
             iter[i] = iterArray[i];
         }
-        std::cout << "Iterations passed : " << iter[0] << "," << iter[1] << std::endl;
+        temp.clear(); temp << "Iterations passed : " << iter[0] << "," << iter[1] << "\n"; logger(temp.str().c_str());
 
-        std::cout << "Energy params passed : ";
+        temp.clear(); temp << "Energy params passed : ";
         for (int i = 0; i < sizeof(energy_params) / sizeof(energy_params[0]); i++) {
             energy_params[i] = energyArray[i];
-            std::cout << energy_params[i] << ",";
+            temp << energy_params[i] << ",";
         }
-        std::cout << std::endl;
+        temp << "\n"; logger(temp.str().c_str());
 
         // call active contour function with the params
         get_active_contour(image, mGr, iterations, init_contour);
         non_zero_before = countNonZero(mGr); // non zero pixel count in contour image
-        std::cout << "Non Zero Pixels count before : " << non_zero_before << std::endl;
+        temp.clear(); temp << std::string("Non Zero Pixels count before : ") << non_zero_before << "\n"; logger(temp.str().c_str());
 
         // find largest contour and draw mask
         mask_image = Scalar(0);
         create_mask(mGr, mask_image);
         non_zero_after = countNonZero(mask_image); // non zero pixel count in mask
         // Print non zero pixels to debug breaks in the contour
-        std::cout << "Non Zero Pixels count after : " << non_zero_after << std::endl;
+        temp.clear(); temp << std::string("Non Zero Pixels count after : ") << non_zero_after << "\n"; logger(temp.str().c_str());
 
         // We assume a filled mask has atleast 10 times more number of non zero pixels
         if (non_zero_after > 10 * non_zero_before) {
-            std::cout << "No breaks in image" << std::endl;
+            temp.clear(); temp << "No breaks in image" << "\n"; logger(temp.str().c_str());
         }
         else {
             // Emtpy contents in the arrays
             break_points.clear();
             // If there are breaks in contour, drawContours doesn't fill the contour
             // hence the non zero pixel count would be around the same
-            std::cout << "breaks found in image" << std::endl;
+            temp.clear(); temp << "breaks found in image" << "\n"; logger(temp.str().c_str());
             find_contour_breaks(); // find end points of open contours
             stitch_contour_breaks(mGr); // join the break points to form closed contour
 
@@ -358,7 +366,7 @@ extern "C" {
             mask_image = Scalar(0);
             create_mask(mGr, mask_image);
             non_zero_after = countNonZero(mask_image);
-            std::cout << "Non Zero Pixels count after : " << non_zero_after << std::endl;
+            temp.clear(); temp << std::string("Non Zero Pixels count after : ") << non_zero_after << "\n"; logger(temp.str().c_str());
 
             for (int j = 0; j <= 1; j++) {
                 if (non_zero_after > 10 * non_zero_before) {
@@ -368,7 +376,7 @@ extern "C" {
                     break_points.clear();
                     // If there are breaks in contour, drawContours doesn't fill the contour
                     // hence the non zero pixel count would be around the same
-                    std::cout << "breaks found again in image" << std::endl;
+                    temp.clear(); temp << "breaks found again in image" << "\n"; logger(temp.str().c_str());
                     find_contour_breaks(); // find end points of open contours
                     stitch_contour_breaks(mGr); // join the break points to form closed contour
 

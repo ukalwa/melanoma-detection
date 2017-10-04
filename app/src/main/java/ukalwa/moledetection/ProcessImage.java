@@ -121,7 +121,9 @@ public class ProcessImage extends Activity {
     private int maxAreaIdx;
     private int rows, cols;
     private double maxArea;
+    Rect warpRect;
     private String fileWithoutExtension;
+    private int real_diamter_pixels_mm = 72;
 
     private ArrayList<Number> performanceMetric;
 
@@ -328,6 +330,9 @@ public class ProcessImage extends Activity {
          ******************************************************************************************/
         start = System.currentTimeMillis(); // start execution of color feature extraction
 //      int nColors=0;
+        // convert diameter in pixels to mm
+        featureSet.set(3, (double) Math.round(featureSet.get(3)/real_diamter_pixels_mm ));
+        featureSet.set(4, (double) Math.round(featureSet.get(4)/real_diamter_pixels_mm));
         isMelanoma = classifyLesion();
         end = System.currentTimeMillis();
         performanceMetric.add(end-start); // end execution of color feature extraction
@@ -388,7 +393,7 @@ public class ProcessImage extends Activity {
 //        resultView.setText(Html.fromHtml("<h3><font color = 'red'> Suspicious of Melanoma</font></h3>"));
 
         // Log results to console
-        Log.i(TAG, "Feature set:" + Arrays.toString(featureSet.toArray()));
+        Log.i(TAG, "Original Feature set:" + Arrays.toString(featureSet.toArray()));
         Log.i(TAG, "Individual Execution times:" + Arrays.toString(performanceMetric.toArray()));
         Log.i(TAG, "Total Execution time:" + Long.toString(System.currentTimeMillis() - startTime));
 
@@ -437,9 +442,11 @@ public class ProcessImage extends Activity {
 
         contours = new ArrayList<>();
         Mat mHierarchy = new Mat();
+        Mat cnt = new Mat();
+        double contourarea=0;
 
-        Imgproc.findContours(contourMask, contours, mHierarchy, Imgproc.RETR_TREE,
-                Imgproc.CHAIN_APPROX_SIMPLE);
+        Imgproc.findContours(contourMask, contours, mHierarchy, Imgproc.RETR_EXTERNAL,
+                Imgproc.CHAIN_APPROX_NONE);
         Log.i(TAG, "Contours size : " + contours.size());
 
         if (contours.size() == 0){
@@ -447,14 +454,15 @@ public class ProcessImage extends Activity {
         }
         else {
             for (int idx = 0; idx < contours.size(); idx++) {
-                Mat cnt = contours.get(idx);
-                double contourarea = Imgproc.contourArea(cnt);
+                cnt = contours.get(idx);
+                contourarea = Imgproc.contourArea(cnt);
                 if (contourarea > maxArea) {
                     maxArea = contourarea;
                     maxAreaIdx = idx;
                 }
             }
         }
+        Log.i(TAG, "Max area, idx, size : " + contourarea + maxAreaIdx + contours.get(maxAreaIdx).size());
         return new AbstractMap.SimpleEntry<>(maxAreaIdx, contours);
     }
 
@@ -463,10 +471,11 @@ public class ProcessImage extends Activity {
         MatOfPoint2f point2F = new MatOfPoint2f(contour.toArray());
         RotatedRect ellipse = Imgproc.fitEllipse(point2F);
         maxArea = Core.countNonZero(contourMask);
+        Log.i(TAG, "Non zero pixel count:" + maxArea);
+        Log.i(TAG, "contour count:" + contour.size());
 
         double angle = ellipse.angle;
-        Log.i(TAG, "rotation angle,width,height : " + angle + "," + ellipse.size.width + "," +
-                ellipse.size.height);
+        Log.i(TAG, "ellipse params : " + ellipse.toString());
         if (ellipse.size.width < ellipse.size.height) {
             if (angle < 90)
                 angle -= 90;
@@ -480,10 +489,15 @@ public class ProcessImage extends Activity {
 
         newWidth = (int) ((rows *sin)+(cols *cos));
         newHeight = (int) ((rows *cos)+(cols * sin));
-        Log.i(TAG, "rot mat : " + rot_mat.dump());
+        Log.i(TAG, "old rot mat : " + rot_mat.dump());
         Log.i(TAG, "cos, sin : " + Double.toString(cos)+ Double.toString(sin));
-        rot_mat.get(0,2)[0] += newWidth/2 - cols /2;
-        rot_mat.get(1,2)[0] += newHeight/2 - rows /2;
+        double[] updatedWidth = rot_mat.get(0,2);
+        updatedWidth[0] += newWidth/2 - cols /2;
+        rot_mat.put(0,2, updatedWidth);
+        double[] updatedHeight = rot_mat.get(1,2);
+        updatedHeight[0] += newHeight/2 - rows /2;
+        rot_mat.put(1,2, updatedHeight);
+        Log.i(TAG, "new rot mat : " + rot_mat.dump());
 
         // extract Asymmetry, Border, Diameter features
         featureSet = new ArrayList<>();
@@ -510,30 +524,26 @@ public class ProcessImage extends Activity {
         diffHorizontal = Mat.zeros(contourRegion.size(),contourRegion.type());
         diffVertical = Mat.zeros(contourRegion.size(),contourRegion.type());
 
-        Log.i(TAG, "mean : " + Core.mean(flipContourHorizontal) + "," + Core.mean(flipContourVertical));
-        Log.i(TAG, "mean : " + Core.mean(contourRegion));
-        Log.i(TAG, "reached end new compare");
 //        Core.compare(contourRegion, flipContourHorizontal, diffHorizontal, Core.CMP_EQ);
 //        Core.compare(contourRegion, flipContourVertical, diffVertical, Core.CMP_EQ);
         Compare(contourRegion.getNativeObjAddr(), flipContourHorizontal.getNativeObjAddr(),
                 diffHorizontal.getNativeObjAddr());
         Compare(contourRegion.getNativeObjAddr(), flipContourVertical.getNativeObjAddr(),
                 diffVertical.getNativeObjAddr());
-        Log.i(TAG, "reached end 44");
+
         Core.bitwise_not(diffHorizontal, diffHorizontal);
         Core.bitwise_not(diffVertical, diffVertical);
         double hAsym = Core.countNonZero(diffHorizontal);
         double vAsym = Core.countNonZero(diffVertical);
-        Log.i(TAG, "reached end 5");
+
         flipContourHorizontal.release();
         flipContourVertical.release();
-        Log.i(TAG, "reached end 6");
-        featureSet.add((double) Math.round (hAsym/maxArea * 10000.0) / 10000.0);
-        featureSet.add((double) Math.round (vAsym/maxArea * 10000.0) / 10000.0);
-        featureSet.add((double) Math.round (b * 10000.0) / 10000.0);
-        featureSet.add(Math.max(ellipse.size.width, ellipse.size.height));
-        featureSet.add(Math.min(ellipse.size.width, ellipse.size.height));
 
+        featureSet.add((double) Math.round (hAsym/maxArea * 100.0) / 100.0);
+        featureSet.add((double) Math.round (vAsym/maxArea * 100.0) / 100.0);
+        featureSet.add((double) Math.round (b * 100.0) / 100.0);
+        featureSet.add((double)Math.max(warpRect.width, warpRect.height));
+        featureSet.add((double)Math.min(warpRect.width, warpRect.height));
     }
 
     private void extractFeaturesColor(){
@@ -575,7 +585,7 @@ public class ProcessImage extends Activity {
         Mat mHierarchy = new Mat();
         double maxArea = -1;
         int maxAreaIdx = -1;
-        Imgproc.findContours(image, contours, mHierarchy, Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_SIMPLE);
+        Imgproc.findContours(image, contours, mHierarchy, Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_NONE);
 
         if (contours.size() > 0){
             for (int idx = 0; idx < contours.size(); idx++) {
@@ -588,7 +598,7 @@ public class ProcessImage extends Activity {
             }
 
             MatOfPoint warpedContour = contours.get(maxAreaIdx);
-            Rect warpRect = Imgproc.boundingRect(warpedContour);
+            warpRect = Imgproc.boundingRect(warpedContour);
             image = image.submat(warpRect);
         }
 
@@ -615,7 +625,7 @@ public class ProcessImage extends Activity {
 
     private int classifyLesion(){
         SVM svm = SVM.load(classifierXml);
-        svm.setC(3.0); svm.setGamma(0.1); svm.setKernel(SVM.LINEAR); svm.setDegree(5);
+        svm.setC(5.0); svm.setGamma(0.2); svm.setKernel(SVM.RBF); svm.setDegree(5);
         Mat sample = Mat.zeros(new Size(11,1),CvType.CV_32FC1);
         sample.put(0, 0, featureSet.get(0)); // A1
         sample.put(0, 1, featureSet.get(1)); // A2

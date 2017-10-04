@@ -69,15 +69,10 @@ class ColorDetection{
         List<MatOfPoint> contours2 = new ArrayList<>();
         Core.inRange(mHsvMat, low_color, high_color, mMask);//table 2
         Imgproc.findContours(mMask, contours, mHierarchy, Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_NONE);
-//        Double[] areas = new Double[contours.size()];
         for(int i=0; i< contours.size(); i++){
             Mat contour = contours.get(i);
             cntArea = Imgproc.contourArea(contour);
-            if(cntArea > contourArea * 0.02 && !color.equals("Black")){
-                contours2.add(contours.get(i));
-//                Log.i("INTERNAL", color + " Area" + cntArea);
-            }
-            if(cntArea > contourArea * 0.02 && color.equals("Black") && cntArea < contourArea){
+            if(cntArea > contourArea * 0.02 &&  cntArea < contourArea){
                 contours2.add(contours.get(i));
 //                Log.i("INTERNAL", color + " Area" + cntArea);
             }
@@ -153,7 +148,7 @@ class ColorDetection{
             else{
                 dist = 0;
             }
-            featureSet.add(dist);
+            featureSet.add((double) Math.round(dist/featureSet.get(3) * 10000.0)/10000.0);
 
          }
         nColors = colorsFound.size();
