@@ -50,6 +50,8 @@ import android.widget.Button;
 
 import org.opencv.android.Utils;
 import org.opencv.core.Mat;
+import org.opencv.core.Point;
+import org.opencv.core.Rect;
 import org.opencv.imgproc.CLAHE;
 import org.opencv.imgproc.Imgproc;
 
@@ -215,14 +217,31 @@ public class OpenCVCamera extends Activity {
                         byte[] bytes = new byte[buffer.capacity()];
                         buffer.get(bytes);
                         Bitmap bitmapImage = BitmapFactory.decodeByteArray(bytes, 0, bytes.length, null);
-                        Mat mat_image = new Mat();
-                        Utils.bitmapToMat(bitmapImage, mat_image); //convert bitmap image to Mat image for image processing
-                        Imgproc.medianBlur(mat_image, mat_image ,15);
-//                        CLAHE claheDesc = Imgproc.createCLAHE(); //Initialize clahe
-//                        claheDesc.setClipLimit(2);
-//                        claheDesc.apply(mat_image, mat_image);
-                        Utils.matToBitmap(mat_image, bitmapImage); //convert processed Mat image back to  bitmap image
-                        save(bitmapImage);
+                        Mat matImage = new Mat();
+                        Utils.bitmapToMat(bitmapImage, matImage); //convert bitmap image to Mat image for image processing
+                        int max_dim = Math.max(matImage.rows(), matImage.cols());
+                        if (max_dim > 1024){
+                            double ratio = max_dim/1024;
+                            double nHeight = matImage.rows() / ratio ;
+                            double nWidth = matImage.cols() / ratio ;
+                            Imgproc.resize(matImage, matImage, new org.opencv.core.Size(nWidth, nHeight));
+                        }
+                        Log.i(TAG,"Image dimensions before"+matImage.width() +"x"+matImage.height());
+                        // Crop height of the image
+                        Size crop_size = new Size(600, 500);
+                        Point center = new Point(matImage.width()/2, matImage.height()/2);
+                        Rect cropRect = new Rect((int)(center.x-crop_size.getWidth()/2),
+                                (int)(center.y-crop_size.getHeight()/2), crop_size.getWidth(),
+                                crop_size.getHeight());
+                        Mat croppedMat = matImage.submat(cropRect);
+                        Log.i(TAG,"Image dimensions after"+croppedMat.width() +"x"+croppedMat.height());
+                        Imgproc.medianBlur(croppedMat, croppedMat ,5);
+                        Bitmap bmp = Bitmap.createBitmap(croppedMat.cols(), croppedMat.rows(),
+                                Bitmap.Config.ARGB_8888);
+                        Utils.matToBitmap(croppedMat, bmp); //convert processed Mat image back to  bitmap image
+                        matImage.release();
+                        croppedMat.release();
+                        save(bmp);
                     } catch (IOException e) {
                         e.printStackTrace();
                     } finally {

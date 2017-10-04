@@ -44,6 +44,7 @@ import org.opencv.core.RotatedRect;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.opencv.imgcodecs.Imgcodecs;
+import org.opencv.imgproc.CLAHE;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.imgproc.Moments;
 import org.opencv.ml.SVM;
@@ -273,12 +274,35 @@ public class ProcessImage extends Activity {
          * Preprocessing Stage
          ******************************************************************************************/
         long start = System.currentTimeMillis(); // start execution of preprocessing
-        //Blur the image to reduce noise in the image
-        imageMat = new Mat(originalMat.size(),CvType.CV_8UC3);
-        Imgproc.medianBlur(originalMat, imageMat ,9);
+
+        imageMat = originalMat.clone();
+        // Applying CLAHE to resolve uneven illumination
+        hsvMat = new Mat(originalMat.size(),CvType.CV_8UC3);
+
+        Imgproc.cvtColor(originalMat, hsvMat, Imgproc.COLOR_BGR2HSV);
+        CLAHE clahe = Imgproc.createCLAHE(3.0, new Size(8,8));
+        List<Mat> splitMats = new ArrayList<Mat>(3);
+        Core.split(hsvMat, splitMats);
+        Log.i(TAG, "Before Clahe and morph close" + Core.mean(splitMats.get(2)));
+        Mat illuminationCorrectedChannel = new Mat();
+        clahe.apply(splitMats.get(2), illuminationCorrectedChannel);
+        Log.i(TAG, "clahe result" + Core.mean(illuminationCorrectedChannel));
+        splitMats.set(2, illuminationCorrectedChannel);
+        Mat kernel = Mat.ones(8,8,CvType.CV_8UC1);
+        for (int i=0; i < splitMats.size();i++){
+            Imgproc.morphologyEx(splitMats.get(i), illuminationCorrectedChannel, Imgproc.MORPH_CLOSE,
+                    kernel);
+            splitMats.set(i, illuminationCorrectedChannel);
+        }
+        Log.i(TAG, "After Clahe and morph close" + Core.mean(splitMats.get(2)));
+        Mat newHsv = new Mat();
+        Core.merge(splitMats, newHsv);
+        Log.i(TAG, "new hsv mean" + Core.mean(newHsv));
+        Imgproc.cvtColor(newHsv, imageMat, Imgproc.COLOR_HSV2BGR);
+//        //Blur the image to reduce noise in the image
+//        Imgproc.medianBlur(originalMat, imageMat ,9);
 
         // Convert image to HSV for further processing
-        hsvMat = new Mat(imageMat.size(),CvType.CV_8UC3);
         Imgproc.cvtColor(imageMat, hsvMat, Imgproc.COLOR_BGR2HSV);
         contourMask = Mat.zeros(imageMat.size(), CvType.CV_8UC1);
 
