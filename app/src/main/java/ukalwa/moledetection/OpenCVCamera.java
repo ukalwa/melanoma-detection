@@ -17,6 +17,7 @@ package ukalwa.moledetection;
 import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -47,6 +48,7 @@ import android.view.Surface;
 import android.view.TextureView;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageView;
 
 import org.opencv.android.Utils;
 import org.opencv.core.Mat;
@@ -64,12 +66,19 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
+
+import static android.os.SystemClock.sleep;
+
 public class OpenCVCamera extends Activity {
     private static final String TAG = "OpenCVCamera";
-    private File mDirectory = new File(Environment.getExternalStorageDirectory(), "/" + mDirName);
     private static final String mDirName = "MoleDetection";
+    private File mDirectory = new File(Environment.getExternalStorageDirectory(), "/" + mDirName);
     private Button takePictureButton;
     private TextureView textureView;
+    private Button retake_button,proceed_button;
+    public final static String FILEPATH = "MESSAGE";
+    protected String filePath = mDirectory +"/camera001.jpg";
 
     static{
         System.loadLibrary("opencv_java3");
@@ -93,6 +102,10 @@ public class OpenCVCamera extends Activity {
     private boolean mFlashSupported;
     private Handler mBackgroundHandler;
     private HandlerThread mBackgroundThread;
+    private ImageView imageView;
+    Mat croppedMat = new Mat();
+    private boolean isImageAvailable = false;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -101,6 +114,10 @@ public class OpenCVCamera extends Activity {
         assert textureView != null;
         textureView.setSurfaceTextureListener(textureListener);
         takePictureButton = (Button) findViewById(R.id.btn_takepicture);
+        imageView = (ImageView) findViewById(R.id.full_image_view2);
+        retake_button = (Button) findViewById(R.id.button3);
+        proceed_button = (Button) findViewById(R.id.button4);
+
         assert takePictureButton != null;
         if (ContextCompat.checkSelfPermission(this,
                 Manifest.permission.CAMERA)
@@ -109,15 +126,65 @@ public class OpenCVCamera extends Activity {
             ActivityCompat.requestPermissions(this,
                     new String[]{android.Manifest.permission.CAMERA},
                     REQUEST_CAMERA_PERMISSION);
-
         }
         takePictureButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 takePicture();
+                while(!isImageAvailable){
+                    sleep(1000);
+                }
+                Bitmap bmp = Bitmap.createBitmap(croppedMat.width(), croppedMat.height(),
+                        Bitmap.Config.ARGB_8888);
+                Utils.matToBitmap(croppedMat, bmp);
+                textureView.setVisibility(View.GONE);
+                takePictureButton.setVisibility(View.GONE);
+                imageView.setImageBitmap(bmp);
+                imageView.setVisibility(View.VISIBLE);
+                retake_button.setVisibility(View.VISIBLE);
+                proceed_button.setVisibility(View.VISIBLE);
+
+                addListenerOnProceedButton();
+                addListenerOnRetakeButton();
             }
         });
     }
+
+    public void addListenerOnProceedButton() {
+
+        Button button = (Button) findViewById(R.id.button4);
+        button.setOnClickListener(new View.OnClickListener() {
+
+            @Override
+            public void onClick(View v) {
+                Intent i = new Intent(OpenCVCamera.this, ProcessImage.class);
+                i.putExtra(FILEPATH, filePath);
+                startActivity(i);
+
+            }
+
+        });
+
+    }
+
+    public void addListenerOnRetakeButton() {
+
+        Button button = (Button) findViewById(R.id.button3);
+        button.setOnClickListener(new View.OnClickListener() {
+
+            @Override
+            public void onClick(View v) {
+                imageView.setVisibility(View.GONE);
+                retake_button.setVisibility(View.GONE);
+                proceed_button.setVisibility(View.GONE);
+                textureView.setVisibility(View.VISIBLE);
+                takePictureButton.setVisibility(View.VISIBLE);
+            }
+
+        });
+
+    }
+
     TextureView.SurfaceTextureListener textureListener = new TextureView.SurfaceTextureListener() {
         @Override
         public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
@@ -185,10 +252,8 @@ public class OpenCVCamera extends Activity {
         CameraManager manager = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
         try {
             CameraCharacteristics characteristics = manager.getCameraCharacteristics(cameraDevice.getId());
-            Size[] jpegSizes = null;
-            if (characteristics != null) {
-                jpegSizes = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP).getOutputSizes(ImageFormat.JPEG);
-            }
+//            Size[] jpegSizes = null;
+//            jpegSizes = Objects.requireNonNull(characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)).getOutputSizes(ImageFormat.JPEG);
             int width = 1024;
             int height = 768;
 //            if (jpegSizes != null && 0 < jpegSizes.length) {
@@ -206,11 +271,12 @@ public class OpenCVCamera extends Activity {
             // Orientation
             int rotation = getWindowManager().getDefaultDisplay().getRotation();
             captureBuilder.set(CaptureRequest.JPEG_ORIENTATION, ORIENTATIONS.get(rotation));
-            file = new File(mDirectory +"/camera001.jpg");
+            file = new File(filePath);
             ImageReader.OnImageAvailableListener readerListener = new ImageReader.OnImageAvailableListener() {
                 @Override
                 public void onImageAvailable(ImageReader reader) {
                     Image image = null;
+                    Size crop_size = new Size(600, 500);
                     try {
                         image = reader.acquireLatestImage();
                         ByteBuffer buffer = image.getPlanes()[0].getBuffer();
@@ -228,20 +294,21 @@ public class OpenCVCamera extends Activity {
                         }
                         Log.i(TAG,"Image dimensions before"+matImage.width() +"x"+matImage.height());
                         // Crop height of the image
-                        Size crop_size = new Size(600, 500);
+//                        Size crop_size = new Size(600, 500);
                         Point center = new Point(matImage.width()/2, matImage.height()/2);
                         Rect cropRect = new Rect((int)(center.x-crop_size.getWidth()/2),
                                 (int)(center.y-crop_size.getHeight()/2), crop_size.getWidth(),
                                 crop_size.getHeight());
-                        Mat croppedMat = matImage.submat(cropRect);
+                        croppedMat = matImage.submat(cropRect);
                         Log.i(TAG,"Image dimensions after"+croppedMat.width() +"x"+croppedMat.height());
                         Imgproc.medianBlur(croppedMat, croppedMat ,5);
                         Bitmap bmp = Bitmap.createBitmap(croppedMat.cols(), croppedMat.rows(),
                                 Bitmap.Config.ARGB_8888);
                         Utils.matToBitmap(croppedMat, bmp); //convert processed Mat image back to  bitmap image
                         matImage.release();
-                        croppedMat.release();
+//                        croppedMat.release();
                         save(bmp);
+                        isImageAvailable = true;
                     } catch (IOException e) {
                         e.printStackTrace();
                     } finally {
@@ -288,7 +355,7 @@ public class OpenCVCamera extends Activity {
                 public void onConfigureFailed(@NonNull CameraCaptureSession session) {
                 }
             }, mBackgroundHandler);
-        } catch (CameraAccessException e) {
+        } catch (CameraAccessException | NullPointerException e) {
             e.printStackTrace();
         }
     }

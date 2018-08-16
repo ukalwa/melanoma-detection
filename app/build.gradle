@@ -11,18 +11,18 @@ android {
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         multiDexEnabled true
-        ndk{
-            abiFilters 'armeabi-v7a', 'x86', 'arm64-v8a'
-        }
-        externalNativeBuild {
-            cmake {
-                cppFlags "-frtti -fexceptions"
-                abiFilters 'armeabi-v7a', 'x86', 'arm64-v8a'
-                arguments '-DANDROID_PLATFORM=android-21',
-                        '-DANDROID_TOOLCHAIN=clang', '-DANDROID_STL=gnustl_static',
-                        '-DPROJECT_ROOT='+projectDir, '-DOPENCV_SDK='+System.getenv('OPENCV_SDK')
-            }
-        }
+//        ndk{
+//            abiFilters 'armeabi-v7a', 'x86', 'arm64-v8a'
+//        }
+//        externalNativeBuild {
+//            cmake {
+//                cppFlags "-frtti -fexceptions"
+//                abiFilters 'armeabi-v7a', 'x86', 'arm64-v8a'
+//                arguments '-DANDROID_PLATFORM=android-21',
+//                        '-DANDROID_TOOLCHAIN=clang', '-DANDROID_STL=gnustl_static',
+//                        '-DPROJECT_ROOT='+projectDir, '-DOPENCV_SDK='+System.getenv('OPENCV_SDK')
+//            }
+//        }
     }
     sourceSets {
         main {
@@ -30,31 +30,32 @@ android {
             jniLibs.srcDirs = ['src/main/jniLibs']
         }
     }
-//
-//    Properties properties = new Properties()
-//    properties.load(project.rootProject.file('local.properties').newDataInputStream())
-//    def ndkDir = properties.getProperty('ndk.dir')
-//    task ndkBuild(type: Exec, description: 'Compile JNI via NDK'){
-//        commandLine "$ndkDir\\ndk-build.cmd",
-//                'NDK_PROJECT_PATH=build/intermediates/ndk',
-//                'NDK_LIBS_OUT=src/main/jniLibs',
-//                'APP_BUILD_SCRIPT=src/main/cpp/Android.mk',
-//                'NDK_APPLICATION_MK=src/main/cpp/Application.mk'
-//    }
-//    tasks.withType(JavaCompile){
-//        compileTask -> compileTask.dependsOn  ndkBuild
-//    }
+
+    Properties properties = new Properties()
+    properties.load(project.rootProject.file('local.properties').newDataInputStream())
+    def ndkDir = properties.getProperty('ndk.dir')
+    task ndkBuild(type: Exec, description: 'Compile JNI via NDK'){
+        commandLine "$ndkDir\\ndk-build.cmd",
+                'NDK_PROJECT_PATH=build/intermediates/ndk',
+                'NDK_LIBS_OUT=src/main/jniLibs',
+                'APP_BUILD_SCRIPT=src/main/cpp/Android.mk',
+                'NDK_APPLICATION_MK=src/main/cpp/Application.mk'
+    }
+    tasks.withType(JavaCompile){
+        compileTask -> compileTask.dependsOn  ndkBuild
+    }
+
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
-    externalNativeBuild {
-        cmake {
-            path "CMakeLists.txt"
-        }
-    }
+//    externalNativeBuild {
+//        cmake {
+//            path "CMakeLists.txt"
+//        }
+//    }
     splits {
 
         // Configures multiple APKs based on ABI.
@@ -64,7 +65,7 @@ android {
             enable true
 
             // By default all ABIs are included, so use reset() and include to specify that we only
-            // want APKs for x86, armeabi-v7a, and mips.
+            // want APKs for x86, armeabi-v7a, and arm64-v8a.
 
             // Resets the list of ABIs that Gradle should create APKs for to none.
             reset()

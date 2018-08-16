@@ -6,11 +6,13 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     tools:context="ukalwa.moledetection.OpenCVCamera">
+
     <TextureView
         android:id="@+id/texture"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_alignParentTop="true"/>
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true" />
     <Button
         android:id="@+id/btn_takepicture"
         android:layout_width="wrap_content"
@@ -24,5 +26,38 @@
         android:layout_marginBottom="16dp"
         android:layout_marginTop="16dp"
         />
+
+    <ImageView
+        android:id="@+id/full_image_view2"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true"
+        android:scaleType="fitCenter"
+        android:visibility="invisible" />
+
+    <Button
+        android:id="@+id/button3"
+        style="?android:attr/borderlessButtonStyle"
+        android:layout_width="135dp"
+        android:layout_height="85dp"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentLeft="true"
+        android:background="@android:color/background_light"
+        android:text="Retake"
+        android:textColor="@android:color/black"
+        android:visibility="invisible" />
+
+    <Button
+        android:id="@+id/button4"
+        style="@style/Widget.AppCompat.Button"
+        android:layout_width="135dp"
+        android:layout_height="85dp"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentRight="true"
+        android:background="@android:color/background_light"
+        android:text="Proceed"
+        android:textColor="@android:color/black"
+        android:visibility="invisible" />
 
 </RelativeLayout>

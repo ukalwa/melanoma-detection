@@ -32,7 +32,7 @@ std::vector<Point> break_points;
 std::stringstream temp;
 
 void logger(const char* message){
-    __android_log_write(ANDROID_LOG_INFO, "JNI::DEBUG", message);
+    __android_log_print(ANDROID_LOG_INFO, "JNI::DEBUG", "%s", message);
 }
 
 void get_active_contour(Mat img, Mat mGr, int iterations, int init_contour) {
@@ -51,6 +51,7 @@ void get_active_contour(Mat img, Mat mGr, int iterations, int init_contour) {
     unsigned char* img_gray_data = mGr.data;
 
     bool shape = init_contour != 1; // 1 - Rectangle , 0 - ellipse (default)
+    temp.clear(); temp << "Cols: " << cols << "rows: " << rows << "\n"; logger(temp.str().c_str());
 
     // call the active contour function with the necessary parameters
     ofeli::ACwithoutEdgesYUV ac(img_rgb_data, cols, rows,
@@ -69,6 +70,7 @@ void get_active_contour(Mat img, Mat mGr, int iterations, int init_contour) {
         ac.evolve_to_final_state();
     }
     Lout = &ac.get_Lout();
+    temp.clear(); temp << "Number of points" << Lout->size() << "\n"; logger(temp.str().c_str());
 
     // Draw contour formed by points in Lout
     for (ofeli::List::const_Link iterator = Lout->get_begin(); !iterator->end();
@@ -322,32 +324,32 @@ extern "C" {
         for (int i = 0; i < sizeof(gaussian_params) / sizeof(gaussian_params[0]); i++) {
             gaussian_params[i] = gaussianArray[i];
         }
-        temp.clear(); temp << "Gaussian passed : " << gaussian_params[0] << "," << gaussian_params[1] <<
+//        temp.clear(); temp << "Gaussian passed : " << gaussian_params[0] << "," << gaussian_params[1] <<
         "\n";
 
         for (int i = 0; i < sizeof(iter) / sizeof(iter[0]); i++) {
             iter[i] = iterArray[i];
         }
-        temp.clear(); temp << "Iterations passed : " << iter[0] << "," << iter[1] << "\n"; logger(temp.str().c_str());
+//        temp.clear(); temp << "Iterations passed : " << iter[0] << "," << iter[1] << "\n"; logger(temp.str().c_str());
 
-        temp.clear(); temp << "Energy params passed : ";
+//        temp.clear(); temp << "Energy params passed : ";
         for (int i = 0; i < sizeof(energy_params) / sizeof(energy_params[0]); i++) {
             energy_params[i] = energyArray[i];
             temp << energy_params[i] << ",";
         }
-        temp << "\n"; logger(temp.str().c_str());
+//        temp << "\n"; logger(temp.str().c_str());
 
         // call active contour function with the params
         get_active_contour(image, mGr, iterations, init_contour);
         non_zero_before = countNonZero(mGr); // non zero pixel count in contour image
-        temp.clear(); temp << std::string("Non Zero Pixels count before : ") << non_zero_before << "\n"; logger(temp.str().c_str());
+//        temp.clear(); temp << std::string("Non Zero Pixels count before : ") << non_zero_before << "\n"; logger(temp.str().c_str());
 
         // find largest contour and draw mask
         mask_image = Scalar(0);
         create_mask(mGr, mask_image);
         non_zero_after = countNonZero(mask_image); // non zero pixel count in mask
         // Print non zero pixels to debug breaks in the contour
-        temp.clear(); temp << std::string("Non Zero Pixels count after : ") << non_zero_after << "\n"; logger(temp.str().c_str());
+//        temp.clear(); temp << std::string("Non Zero Pixels count after : ") << non_zero_after << "\n"; logger(temp.str().c_str());
 
         // We assume a filled mask has atleast 10 times more number of non zero pixels
         if (non_zero_after > 10 * non_zero_before) {
@@ -358,7 +360,7 @@ extern "C" {
             break_points.clear();
             // If there are breaks in contour, drawContours doesn't fill the contour
             // hence the non zero pixel count would be around the same
-            temp.clear(); temp << "breaks found in image" << "\n"; logger(temp.str().c_str());
+//            temp.clear(); temp << "breaks found in image" << "\n"; logger(temp.str().c_str());
             find_contour_breaks(); // find end points of open contours
             stitch_contour_breaks(mGr); // join the break points to form closed contour
 
@@ -366,7 +368,7 @@ extern "C" {
             mask_image = Scalar(0);
             create_mask(mGr, mask_image);
             non_zero_after = countNonZero(mask_image);
-            temp.clear(); temp << std::string("Non Zero Pixels count after : ") << non_zero_after << "\n"; logger(temp.str().c_str());
+//            temp.clear(); temp << std::string("Non Zero Pixels count after : ") << non_zero_after << "\n"; logger(temp.str().c_str());
 
             for (int j = 0; j <= 1; j++) {
                 if (non_zero_after > 10 * non_zero_before) {
@@ -376,7 +378,7 @@ extern "C" {
                     break_points.clear();
                     // If there are breaks in contour, drawContours doesn't fill the contour
                     // hence the non zero pixel count would be around the same
-                    temp.clear(); temp << "breaks found again in image" << "\n"; logger(temp.str().c_str());
+//                    temp.clear(); temp << "breaks found again in image" << "\n"; logger(temp.str().c_str());
                     find_contour_breaks(); // find end points of open contours
                     stitch_contour_breaks(mGr); // join the break points to form closed contour
 

@@ -62,6 +62,7 @@ import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 import android.widget.ViewFlipper;
 
 public class ProcessImage extends Activity {
@@ -263,9 +264,9 @@ public class ProcessImage extends Activity {
 
         // Number of iterations to evolve the active contour represented by different colors
         Map<Integer, Scalar> iterationsArray = new HashMap<>();
-        iterationsArray.put(50, new Scalar(0,0,255));
-        iterationsArray.put(100, new Scalar(0,153,0));
-        iterationsArray.put(200, new Scalar(255,255,0));
+//        iterationsArray.put(50, new Scalar(0,0,255));
+//        iterationsArray.put(100, new Scalar(0,153,0));
+//        iterationsArray.put(200, new Scalar(255,255,0));
         iterationsArray.put(400, new Scalar(255,0,0));
 
         // filename without extension to save processed images locally on the device
@@ -276,29 +277,29 @@ public class ProcessImage extends Activity {
         long start = System.currentTimeMillis(); // start execution of preprocessing
 
         imageMat = originalMat.clone();
-        // Applying CLAHE to resolve uneven illumination
+//        // Applying CLAHE to resolve uneven illumination
         hsvMat = new Mat(originalMat.size(),CvType.CV_8UC3);
-
-        Imgproc.cvtColor(originalMat, hsvMat, Imgproc.COLOR_BGR2HSV);
-        CLAHE clahe = Imgproc.createCLAHE(3.0, new Size(8,8));
-        List<Mat> splitMats = new ArrayList<Mat>(3);
-        Core.split(hsvMat, splitMats);
-        Log.i(TAG, "Before Clahe and morph close" + Core.mean(splitMats.get(2)));
-        Mat illuminationCorrectedChannel = new Mat();
-        clahe.apply(splitMats.get(2), illuminationCorrectedChannel);
-        Log.i(TAG, "clahe result" + Core.mean(illuminationCorrectedChannel));
-        splitMats.set(2, illuminationCorrectedChannel);
-        Mat kernel = Mat.ones(8,8,CvType.CV_8UC1);
-        for (int i=0; i < splitMats.size();i++){
-            Imgproc.morphologyEx(splitMats.get(i), illuminationCorrectedChannel, Imgproc.MORPH_CLOSE,
-                    kernel);
-            splitMats.set(i, illuminationCorrectedChannel);
-        }
-        Log.i(TAG, "After Clahe and morph close" + Core.mean(splitMats.get(2)));
-        Mat newHsv = new Mat();
-        Core.merge(splitMats, newHsv);
-        Log.i(TAG, "new hsv mean" + Core.mean(newHsv));
-        Imgproc.cvtColor(newHsv, imageMat, Imgproc.COLOR_HSV2BGR);
+//
+//        Imgproc.cvtColor(originalMat, hsvMat, Imgproc.COLOR_BGR2HSV);
+//        CLAHE clahe = Imgproc.createCLAHE(3.0, new Size(8,8));
+//        List<Mat> splitMats = new ArrayList<Mat>(3);
+//        Core.split(hsvMat, splitMats);
+//        Log.i(TAG, "Before Clahe and morph close" + Core.mean(splitMats.get(2)));
+//        Mat illuminationCorrectedChannel = new Mat();
+//        clahe.apply(splitMats.get(2), illuminationCorrectedChannel);
+//        Log.i(TAG, "clahe result" + Core.mean(illuminationCorrectedChannel));
+//        splitMats.set(2, illuminationCorrectedChannel);
+//        Mat kernel = Mat.ones(8,8,CvType.CV_8UC1);
+//        for (int i=0; i < splitMats.size();i++){
+//            Imgproc.morphologyEx(splitMats.get(i), illuminationCorrectedChannel, Imgproc.MORPH_CLOSE,
+//                    kernel);
+//            splitMats.set(i, illuminationCorrectedChannel);
+//        }
+//        Log.i(TAG, "After Clahe and morph close" + Core.mean(splitMats.get(2)));
+//        Mat newHsv = new Mat();
+//        Core.merge(splitMats, newHsv);
+//        Log.i(TAG, "new hsv mean" + Core.mean(newHsv));
+//        Imgproc.cvtColor(newHsv, imageMat, Imgproc.COLOR_HSV2BGR);
 //        //Blur the image to reduce noise in the image
 //        Imgproc.medianBlur(originalMat, imageMat ,9);
 
@@ -327,6 +328,7 @@ public class ProcessImage extends Activity {
             end = System.currentTimeMillis();
             performanceMetric.add(end-start); // end execution of segmentation for iteration
         }
+//        getContour(400, new Scalar(255,0,0), contourBinary, contourImage);
         contourBinary.release();
         contourImage.release();
 
@@ -433,9 +435,10 @@ public class ProcessImage extends Activity {
     private void getContour(int iterations, Scalar contourColor, Mat contourBinary,
                             Mat contourImage) {
         //Calling Active Contour native method written in C++
-        double init_height = 0.5;
-        double init_width = 0.5;
+        double init_height = 0.6;
+        double init_width = 0.6;
         int shape = 0;
+        Log.i(TAG, "Calling Active contours method \n");
         ActiveContour(imageMat.getNativeObjAddr(), contourMask.getNativeObjAddr(),
                 iterations, shape, init_width, init_height, iter_list,
                 energy_list, gaussian_list);
@@ -444,7 +447,11 @@ public class ProcessImage extends Activity {
                 extractLargestContour(contourMask);
         maxAreaIdx = retVal.getKey();
         contours = retVal.getValue();
-
+        if (contours.size() <= 0){
+            Toast.makeText(this, "Application could not find any lesion ", Toast.LENGTH_SHORT).show();
+            setResult(Activity.RESULT_OK);
+            return;
+        }
         contour = contours.get(maxAreaIdx);
         contourImage.setTo(new Scalar(0));
         Imgproc.drawContours(contourImage, contours, maxAreaIdx, contourColor, 2);
@@ -685,6 +692,7 @@ public class ProcessImage extends Activity {
         super.onDestroy();
         originalMat.release();
         contourMask.release();
+        pDialog.dismiss();
 //        resultMat.release();
         hsvMat.release();
     }

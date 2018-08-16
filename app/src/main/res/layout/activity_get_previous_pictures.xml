@@ -16,7 +16,7 @@
     android:stretchMode="columnWidth"
     android:gravity="center"/>
 
-<ImageView
+    <ImageView
         android:id="@+id/full_image_view"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
