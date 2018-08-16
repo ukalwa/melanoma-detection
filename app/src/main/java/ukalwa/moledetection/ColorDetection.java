@@ -34,7 +34,7 @@ import java.util.TreeSet;
 
 class ColorDetection{
 
-    private double value_threshold;
+    private double value_threshold = 150;
     private double contourArea;
 
     private Mat labelMatrix;
@@ -128,8 +128,8 @@ class ColorDetection{
         }});
 
 
-        int noOfColors = 0;
-        int textSize = 3;
+//        int noOfColors = 0;
+//        int textSize = 3;
         List<String> colorsFound = new ArrayList<>();
         SortedSet<String> keys = new TreeSet<>(map.keySet());
         for (String key : keys){
@@ -139,7 +139,7 @@ class ColorDetection{
             colorContours = getColorContour(mask_img,colors.get(0), colors.get(1), key);
             double dist;
             if (colorContours.size() > 0){
-                noOfColors += 1;
+//                noOfColors += 1;
                 colorsFound.add(key);
                 dist = getColorAtrributes(colorContours);
                 int thickness = 2;
@@ -171,25 +171,25 @@ class ColorDetection{
 
     }
 
-    private void setColorLabel(Scalar colorPrint, String colorName, int textSize)
-    {
-//        int sizeSquare = 40;
-        int totalColors = 5;
-        int sizeSquare = (labelMatrix.height() / totalColors) - 4;
-        Mat colorLabel = labelMatrix.submat(4 + nColors * sizeSquare, (nColors + 1) * sizeSquare, 4, sizeSquare);
-        colorLabel.setTo(colorPrint);
-        Imgproc.putText(labelMatrix, colorName, new Point( sizeSquare + 2, sizeSquare/2 +nColors*sizeSquare ), 1, textSize, new Scalar(0, 0, 0, 255), 2);
-        //Core.putText(helpMatrix, colorName, new Point( sizeSquare + 2, 25+nColors*sizeSquare ), 1, textSize, new Scalar(0, 0, 0, 255), 1);
-        nColors++;
-    }
+//    private void setColorLabel(Scalar colorPrint, String colorName, int textSize)
+//    {
+////        int sizeSquare = 40;
+//        int totalColors = 5;
+//        int sizeSquare = (labelMatrix.height() / totalColors) - 4;
+//        Mat colorLabel = labelMatrix.submat(4 + nColors * sizeSquare, (nColors + 1) * sizeSquare, 4, sizeSquare);
+//        colorLabel.setTo(colorPrint);
+//        Imgproc.putText(labelMatrix, colorName, new Point( sizeSquare + 2, sizeSquare/2 +nColors*sizeSquare ), 1, textSize, new Scalar(0, 0, 0, 255), 2);
+//        //Core.putText(helpMatrix, colorName, new Point( sizeSquare + 2, 25+nColors*sizeSquare ), 1, textSize, new Scalar(0, 0, 0, 255), 1);
+//        nColors++;
+//    }
 
-    void setLabelMatrix(Mat labelMatrix){
-        this.labelMatrix = labelMatrix;
-    }
-
-    Mat getLabelMatrix(){
-        return this.labelMatrix;
-    }
+//    void setLabelMatrix(Mat labelMatrix){
+//        this.labelMatrix = labelMatrix;
+//    }
+//
+//    Mat getLabelMatrix(){
+//        return this.labelMatrix;
+//    }
 
     int getNumberOfColors(){
         return nColors;

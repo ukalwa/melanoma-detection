@@ -100,11 +100,6 @@ public class ProcessImage extends Activity {
 
 
     private ProgressDialog pDialog;
-//    private TextView resultView;
-//    private TextView resultTitle;
-//    private ImageView resultImage;
-//    private ImageView imageViewAbove;
-//    private TextView textViewColor;
 
     // Initialization params of application
     private Mat rot_mat;
@@ -125,7 +120,6 @@ public class ProcessImage extends Activity {
     private double maxArea;
     Rect warpRect;
     private String fileWithoutExtension;
-    private int real_diamter_pixels_mm = 72;
 
     private ArrayList<Number> performanceMetric;
 
@@ -243,7 +237,7 @@ public class ProcessImage extends Activity {
     }
 
 
-    protected int processImage() {
+    protected void processImage() {
         // initialize params
         performanceMetric = new ArrayList<>();
         Log.i(TAG, "fileName : " + message);
@@ -277,31 +271,34 @@ public class ProcessImage extends Activity {
         long start = System.currentTimeMillis(); // start execution of preprocessing
 
         imageMat = originalMat.clone();
-//        // Applying CLAHE to resolve uneven illumination
-        hsvMat = new Mat(originalMat.size(),CvType.CV_8UC3);
-//
-//        Imgproc.cvtColor(originalMat, hsvMat, Imgproc.COLOR_BGR2HSV);
-//        CLAHE clahe = Imgproc.createCLAHE(3.0, new Size(8,8));
-//        List<Mat> splitMats = new ArrayList<Mat>(3);
-//        Core.split(hsvMat, splitMats);
-//        Log.i(TAG, "Before Clahe and morph close" + Core.mean(splitMats.get(2)));
-//        Mat illuminationCorrectedChannel = new Mat();
-//        clahe.apply(splitMats.get(2), illuminationCorrectedChannel);
-//        Log.i(TAG, "clahe result" + Core.mean(illuminationCorrectedChannel));
-//        splitMats.set(2, illuminationCorrectedChannel);
-//        Mat kernel = Mat.ones(8,8,CvType.CV_8UC1);
-//        for (int i=0; i < splitMats.size();i++){
-//            Imgproc.morphologyEx(splitMats.get(i), illuminationCorrectedChannel, Imgproc.MORPH_CLOSE,
-//                    kernel);
-//            splitMats.set(i, illuminationCorrectedChannel);
-//        }
-//        Log.i(TAG, "After Clahe and morph close" + Core.mean(splitMats.get(2)));
-//        Mat newHsv = new Mat();
-//        Core.merge(splitMats, newHsv);
-//        Log.i(TAG, "new hsv mean" + Core.mean(newHsv));
-//        Imgproc.cvtColor(newHsv, imageMat, Imgproc.COLOR_HSV2BGR);
-//        //Blur the image to reduce noise in the image
-//        Imgproc.medianBlur(originalMat, imageMat ,9);
+        //Blur the image to reduce noise in the image
+        Imgproc.medianBlur(imageMat, imageMat ,5);
+
+        // Applying CLAHE to resolve uneven illumination
+        hsvMat = new Mat(imageMat.size(),CvType.CV_8UC3);
+        Imgproc.cvtColor(imageMat, hsvMat, Imgproc.COLOR_BGR2HSV);
+
+        CLAHE clahe = Imgproc.createCLAHE(3.0, new Size(8,8));
+        List<Mat> splitMats = new ArrayList<>(3);
+        Core.split(hsvMat, splitMats);
+        Log.i(TAG, "Before Clahe and morph close" + Core.mean(splitMats.get(2)));
+        Mat illuminationCorrectedChannel = new Mat();
+        clahe.apply(splitMats.get(2), illuminationCorrectedChannel);
+        Log.i(TAG, "clahe result" + Core.mean(illuminationCorrectedChannel));
+        splitMats.set(2, illuminationCorrectedChannel);
+        Mat newHsv = new Mat();
+        Core.merge(splitMats, newHsv);
+        Imgproc.cvtColor(newHsv, imageMat, Imgproc.COLOR_HSV2BGR);
+
+        // Apply Morphological Closing operation
+        Core.split(imageMat, splitMats);
+        Mat kernel = Mat.ones(8,8,CvType.CV_8UC1);
+        for (int i=0; i < splitMats.size();i++){
+            Imgproc.morphologyEx(splitMats.get(i), illuminationCorrectedChannel, Imgproc.MORPH_CLOSE,
+                    kernel);
+            splitMats.set(i, illuminationCorrectedChannel);
+        }
+        Core.merge(splitMats, imageMat);
 
         // Convert image to HSV for further processing
         Imgproc.cvtColor(imageMat, hsvMat, Imgproc.COLOR_BGR2HSV);
@@ -357,13 +354,13 @@ public class ProcessImage extends Activity {
         start = System.currentTimeMillis(); // start execution of color feature extraction
 //      int nColors=0;
         // convert diameter in pixels to mm
-        featureSet.set(3, (double) Math.round(featureSet.get(3)/real_diamter_pixels_mm ));
-        featureSet.set(4, (double) Math.round(featureSet.get(4)/real_diamter_pixels_mm));
+        int real_diamter_pixels_mm = 72;
+        featureSet.set(3, (double) Math.round(featureSet.get(3)/ real_diamter_pixels_mm));
+        featureSet.set(4, (double) Math.round(featureSet.get(4)/ real_diamter_pixels_mm));
         isMelanoma = classifyLesion();
         end = System.currentTimeMillis();
         performanceMetric.add(end-start); // end execution of color feature extraction
 
-        return 0;
     }
 
     private void displayResults(){
@@ -438,6 +435,7 @@ public class ProcessImage extends Activity {
         double init_height = 0.6;
         double init_width = 0.6;
         int shape = 0;
+
         Log.i(TAG, "Calling Active contours method \n");
         ActiveContour(imageMat.getNativeObjAddr(), contourMask.getNativeObjAddr(),
                 iterations, shape, init_width, init_height, iter_list,
