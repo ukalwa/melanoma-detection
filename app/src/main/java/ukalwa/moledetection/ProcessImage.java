@@ -272,33 +272,35 @@ public class ProcessImage extends Activity {
 
         imageMat = originalMat.clone();
         //Blur the image to reduce noise in the image
-        Imgproc.medianBlur(imageMat, imageMat ,5);
+        Imgproc.GaussianBlur(imageMat, imageMat, new Size(5, 5), 0);
+//        Imgproc.medianBlur(imageMat, imageMat ,11);
 
-        // Applying CLAHE to resolve uneven illumination
+        // convert RGB to HSV for colors feature
         hsvMat = new Mat(imageMat.size(),CvType.CV_8UC3);
-        Imgproc.cvtColor(imageMat, hsvMat, Imgproc.COLOR_BGR2HSV);
 
-        CLAHE clahe = Imgproc.createCLAHE(3.0, new Size(8,8));
-        List<Mat> splitMats = new ArrayList<>(3);
-        Core.split(hsvMat, splitMats);
-        Log.i(TAG, "Before Clahe and morph close" + Core.mean(splitMats.get(2)));
-        Mat illuminationCorrectedChannel = new Mat();
-        clahe.apply(splitMats.get(2), illuminationCorrectedChannel);
-        Log.i(TAG, "clahe result" + Core.mean(illuminationCorrectedChannel));
-        splitMats.set(2, illuminationCorrectedChannel);
-        Mat newHsv = new Mat();
-        Core.merge(splitMats, newHsv);
-        Imgproc.cvtColor(newHsv, imageMat, Imgproc.COLOR_HSV2BGR);
-
-        // Apply Morphological Closing operation
-        Core.split(imageMat, splitMats);
-        Mat kernel = Mat.ones(8,8,CvType.CV_8UC1);
-        for (int i=0; i < splitMats.size();i++){
-            Imgproc.morphologyEx(splitMats.get(i), illuminationCorrectedChannel, Imgproc.MORPH_CLOSE,
-                    kernel);
-            splitMats.set(i, illuminationCorrectedChannel);
-        }
-        Core.merge(splitMats, imageMat);
+          // Applying CLAHE to resolve uneven illumination
+//        Imgproc.cvtColor(imageMat, hsvMat, Imgproc.COLOR_BGR2HSV);
+//        CLAHE clahe = Imgproc.createCLAHE(3.0, new Size(8,8));
+//        List<Mat> splitMats = new ArrayList<>(3);
+//        Core.split(hsvMat, splitMats);
+//        Log.i(TAG, "Before Clahe and morph close" + Core.mean(splitMats.get(2)));
+//        Mat illuminationCorrectedChannel = new Mat();
+//        clahe.apply(splitMats.get(2), illuminationCorrectedChannel);
+//        Log.i(TAG, "clahe result" + Core.mean(illuminationCorrectedChannel));
+//        splitMats.set(2, illuminationCorrectedChannel);
+//        Mat newHsv = new Mat();
+//        Core.merge(splitMats, newHsv);
+//        Imgproc.cvtColor(newHsv, imageMat, Imgproc.COLOR_HSV2BGR);
+//
+//        // Apply Morphological Closing operation
+//        Core.split(imageMat, splitMats);
+//        Mat kernel = Mat.ones(8,8,CvType.CV_8UC1);
+//        for (int i=0; i < splitMats.size();i++){
+//            Imgproc.morphologyEx(splitMats.get(i), illuminationCorrectedChannel, Imgproc.MORPH_CLOSE,
+//                    kernel);
+//            splitMats.set(i, illuminationCorrectedChannel);
+//        }
+//        Core.merge(splitMats, imageMat);
 
         // Convert image to HSV for further processing
         Imgproc.cvtColor(imageMat, hsvMat, Imgproc.COLOR_BGR2HSV);
@@ -325,7 +327,6 @@ public class ProcessImage extends Activity {
             end = System.currentTimeMillis();
             performanceMetric.add(end-start); // end execution of segmentation for iteration
         }
-//        getContour(400, new Scalar(255,0,0), contourBinary, contourImage);
         contourBinary.release();
         contourImage.release();
 
@@ -343,7 +344,6 @@ public class ProcessImage extends Activity {
          * Color feature extraction stage
          ******************************************************************************************/
         start = System.currentTimeMillis(); // start execution of color feature extraction
-//        int nColors=0;
         extractFeaturesColor();
         end = System.currentTimeMillis();
         performanceMetric.add(end-start); // end execution of color feature extraction
@@ -352,7 +352,6 @@ public class ProcessImage extends Activity {
          * Feature classification stage
          ******************************************************************************************/
         start = System.currentTimeMillis(); // start execution of color feature extraction
-//      int nColors=0;
         // convert diameter in pixels to mm
         int real_diamter_pixels_mm = 72;
         featureSet.set(3, (double) Math.round(featureSet.get(3)/ real_diamter_pixels_mm));
@@ -401,19 +400,9 @@ public class ProcessImage extends Activity {
                 "roi_horizontal", false);
 
         // Color Image
-//        Bitmap aboveBmp = Bitmap.createBitmap(matrixAbove.cols(), matrixAbove.rows(), Bitmap.Config.ARGB_8888);
-//        if (!matrixAbove.empty())
-//            matrixAbove.copyTo(matrixAbove);
-//        Utils.matToBitmap(matrixAbove, aboveBmp);
-//        imageViewAbove.setImageBitmap(aboveBmp);
         displayImageView(colorImage,imageView5,imageTitleText5, resultText5,
                 "Number of colors", "<h4>" + "C :" + featureSet.get(10).toString() + "</h4>",
                 "colors", false);
-
-//        // Result image
-//        displayImageView(colorImage,resultImage,resultTitle,"Result",
-//                "display", false);
-//        resultView.setText(Html.fromHtml("<h3><font color = 'red'> Suspicious of Melanoma</font></h3>"));
 
         // Log results to console
         Log.i(TAG, "Original Feature set:" + Arrays.toString(featureSet.toArray()));
@@ -432,8 +421,8 @@ public class ProcessImage extends Activity {
     private void getContour(int iterations, Scalar contourColor, Mat contourBinary,
                             Mat contourImage) {
         //Calling Active Contour native method written in C++
-        double init_height = 0.6;
-        double init_width = 0.6;
+        double init_height = 0.2;
+        double init_width = 0.2;
         int shape = 0;
 
         Log.i(TAG, "Calling Active contours method \n");
