@@ -13,15 +13,16 @@ This android application analyzes a lesion image and can classify it as benign o
 - Clone this repository and copy necessary files
 
 ```cmd
-  git clone https://github.com/ukalwa/moledetection
-  cd moledetection\app\src\main\jniLibs
+  git clone https://github.com/ukalwa/melanoma-detection
+  mkdir jniLibs
+  cd melanoma-detection\app\src\main\jniLibs
   REM copy the libraries from opencv to this location
   xcopy /E %OPENCV_ANDROID_SDK%\sdk\native\libs .
 ```
 
 - Now open Android Studio and select *Open an existing Android Studio Project*
 
-- Navigate to the moledetection directory and select it
+- Navigate to the melanoma-detection directory and select it
 
 - When it prompts to install necessary tools, select OK.
 
