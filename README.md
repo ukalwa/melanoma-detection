@@ -8,16 +8,15 @@ This android application analyzes a lesion image and can classify it as benign o
 
 - Download & Install [Android Studio]
 
-- Download and extract [OpenCV Android Pack] folder and then set `OPENCV_ANDROID_SDK` environment variable pointing to the downloaded folder location
+- Download and extract [OpenCV Android Pack] 3.2.0 folder and then set `OPENCV_ANDROID_SDK` environment variable pointing to the downloaded folder location
 
-- Clone this repository and copy necessary files
+- Clone this repository and copy pre-built libraries files
 
 ```cmd
   git clone https://github.com/ukalwa/melanoma-detection
-  mkdir jniLibs
-  cd melanoma-detection\app\src\main\jniLibs
+  mkdir melanoma-detection\app\src\main\jniLibs
   REM copy the libraries from opencv to this location
-  xcopy /E %OPENCV_ANDROID_SDK%\sdk\native\libs .
+  xcopy /E %OPENCV_ANDROID_SDK%\sdk\native\libs melanoma-detection\app\src\main\jniLibs
 ```
 
 - Now open Android Studio and select *Open an existing Android Studio Project*
@@ -28,14 +27,11 @@ This android application analyzes a lesion image and can classify it as benign o
 
 - After all the necessary tools are installed, the project is ready to be tested.
 
-- Click `Run` and connect to an Android device or run an emulator (*x86 preferred*) and give required permissions.
+- Click `Build -> Make Project` to build the apk. If you get errors at this step, please check the [Troubleshooting](#troubleshooting) guide.
 
-- Install OpenCV_manager when it asks and if you get an error, uninstall it and install the apk from `%OPENCV_ANDROID_SDK%\apk`
+- Before running the apk, check to make sure files `opencv_java3.so` and  `libactive_contour.so` are in the apk which can be found at `<project-root>/<module-root>\build\outputs\apk\debug`
 
-```cmd
-  REM for x86 device
-  adb shell %OPENCV_ANDROID_SDK%\apk\OpenCV_3.2.0_Manager_3.20_x86.apk
-```
+- Now `Run` the project to install the apk on an android device and install OpenCV_manager when prompted.
 
 ## Steps involved
 
@@ -52,6 +48,21 @@ The code performs following steps:
 
 This code is GNU GENERAL PUBLIC LICENSED.
 
+## Troubleshooting
+
+- If you get an error like `fatal error: 'opencv2/imgproc/imgproc.hpp' file not found`, it most likely means that the OPENCV_ADNROID_SDK path is incorrect. You can check this the `cmake_build_command.txt` at this location `<project-root>/<module-root>/.externalNativeBuild/cmake/<build-type>/<ABI>/`.
+
+  - To resolve this, restart the computer to get the environment variables reflected in Android Studio.
+
+- If you get an error after installing OpenCV_manager, uninstall it and install the apk in SDK at `%OPENCV_ANDROID_SDK%\apk`.
+
+```cmd
+  REM for x86 device
+  adb shell %OPENCV_ANDROID_SDK%\apk\OpenCV_3.2.0_Manager_3.20_x86.apk
+```
+
+- If you get any other error, try cleaning the project and building the project. If it doesn't work, please raise an issue.
+
 ## Contributing
 
 If you have any suggestions or identified bugs please feel free to post them!
@@ -61,7 +72,7 @@ If you have any suggestions or identified bugs please feel free to post them!
 - Active contour segmentation is adapted from [ofeli] project
 - The computer vision library used for this project is [OpenCV]
 
-[OpenCV Android Pack]: https://opencv.org/releases.html
+[OpenCV Android Pack]: https://sourceforge.net/projects/opencvlibrary/files/opencv-android/3.2.0/opencv-3.2.0-android-sdk.zip/download
 [Android Studio]: https://developer.android.com/studio/
 [10x lens]: https://www.amazon.com/AMIR-180°Fisheye-Screwed-Together-Smartphones/dp/B0179JX8GC
 [ofeli]: https://github.com/pkuwwt/ofeli
